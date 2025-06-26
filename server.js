@@ -1,8 +1,8 @@
-import { listen } from './src/app.js';
+import app from './src/app.js';
 
 const PORT = process.env.PORT || 3000;
 
-const server = listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Book Library API Server running on port ${PORT}`);
   console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
   console.log(`❤️  Health Check: http://localhost:${PORT}/health`);
