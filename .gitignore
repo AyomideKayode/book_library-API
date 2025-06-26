@@ -1,0 +1,116 @@
+# VS Code specific files
+.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IDE - IntelliJ
+.idea/
+*.iml
+
+# GitHub specific files
+.github/
+.github/workflows/
+
+
+# Build artifacts
+bin/
+build/
+out/
+dist/
+target/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# Dependency directories
+node_modules/
+vendor/
+bower_components/
+jspm_packages/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# Coverage directories
+coverage/
+.nyc_output/
+
+# Debug files
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+~$*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+
+# Temporary files
+*.tmp
+temp/
+
+# Testing
+junit.xml
+test-results/
+
+# Package manager specific
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+__pycache__/
+
+# Documentation
+docs/_build/
+
+# Local development configuration
+local.properties
+
+# Secret files
+secrets.yml
+credentials.json
+
+# Project specific ignores (add your own below)
