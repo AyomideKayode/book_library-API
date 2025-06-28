@@ -1,75 +1,129 @@
-import { v4 as uuidv4 } from 'uuid';
+import mongoose from 'mongoose';
 
-class Book {
-  constructor(title, authorId, isbn, genre, publicationDate = null) {
-    this.id = uuidv4();
-    this.title = title;
-    this.authorId = authorId;
-    this.isbn = isbn;
-    this.genre = genre;
-    this.publicationDate = publicationDate;
-    this.available = true;
-    this.createdAt = new Date().toISOString();
-    this.updatedAt = new Date().toISOString();
+const bookSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      trim: true,
+      maxlength: [200, 'Title cannot exceed 200 characters'],
+    },
+    authorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Author',
+      required: [true, 'Author is required'],
+    },
+    isbn: {
+      type: String,
+      required: [true, 'ISBN is required'],
+      unique: true,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          // ISBN-10 or ISBN-13 validation
+          const isbn10Regex = /^(?:\d{9}X|\d{10})$/;
+          const isbn13Regex = /^(?:97[89]\d{10})$/;
+          const cleanIsbn = v.replace(/[-\s]/g, '');
+          return isbn10Regex.test(cleanIsbn) || isbn13Regex.test(cleanIsbn);
+        },
+        message: 'Invalid ISBN format. Must be a valid ISBN-10 or ISBN-13',
+      },
+      index: true,
+    },
+    genre: {
+      type: String,
+      required: [true, 'Genre is required'],
+      trim: true,
+      maxlength: [50, 'Genre cannot exceed 50 characters'],
+    },
+    publicationDate: {
+      type: Date,
+      required: [true, 'Publication date is required'],
+      validate: {
+        validator: function (v) {
+          return v <= new Date();
+        },
+        message: 'Publication date cannot be in the future',
+      },
+    },
+    available: {
+      type: Boolean,
+      default: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Description cannot exceed 1000 characters'],
+    },
+    pages: {
+      type: Number,
+      min: [1, 'Pages must be at least 1'],
+      max: [10000, 'Pages cannot exceed 10000'],
+    },
+    language: {
+      type: String,
+      default: 'English',
+      trim: true,
+      maxlength: [30, 'Language cannot exceed 30 characters'],
+    },
+    publisher: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Publisher cannot exceed 100 characters'],
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
+);
 
-  static validate(bookData) {
-    const errors = [];
+// Indexes for performance
+bookSchema.index({ title: 'text', description: 'text' }); // Text search
+bookSchema.index({ authorId: 1, available: 1 }); // Compound index
+bookSchema.index({ genre: 1, available: 1 }); // Compound index
 
-    if (!bookData.title || bookData.title.trim().length === 0) {
-      errors.push('Title is required');
-    }
+// Virtual for author population
+bookSchema.virtual('author', {
+  ref: 'Author',
+  localField: 'authorId',
+  foreignField: '_id',
+  justOne: true,
+});
 
-    if (!bookData.authorId || bookData.authorId.trim().length === 0) {
-      errors.push('Author ID is required');
-    }
+// Virtual for borrow records
+bookSchema.virtual('borrowRecords', {
+  ref: 'BorrowRecord',
+  localField: '_id',
+  foreignField: 'bookId',
+});
 
-    if (!bookData.isbn || bookData.isbn.trim().length === 0) {
-      errors.push('ISBN is required');
-    }
-
-    if (!bookData.genre || bookData.genre.trim().length === 0) {
-      errors.push('Genre is required');
-    }
-
-    // ISBN format validation (simplified)
-    if (
-      bookData.isbn &&
-      !/^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$/.test(
-        bookData.isbn.replace(/[- ]/g, '')
-      )
-    ) {
-      errors.push('Invalid ISBN format');
-    }
-
-    return errors;
+// Pre-save middleware to format ISBN
+bookSchema.pre('save', function (next) {
+  if (this.isbn) {
+    // Remove hyphens and spaces from ISBN
+    this.isbn = this.isbn.replace(/[-\s]/g, '');
   }
+  next();
+});
 
-  update(updateData) {
-    if (updateData.title !== undefined) this.title = updateData.title;
-    if (updateData.authorId !== undefined) this.authorId = updateData.authorId;
-    if (updateData.isbn !== undefined) this.isbn = updateData.isbn;
-    if (updateData.genre !== undefined) this.genre = updateData.genre;
-    if (updateData.publicationDate !== undefined)
-      this.publicationDate = updateData.publicationDate;
-    if (updateData.available !== undefined)
-      this.available = updateData.available;
-    this.updatedAt = new Date().toISOString();
-  }
+// Static method to find available books
+bookSchema.statics.findAvailable = function () {
+  return this.find({ available: true });
+};
 
-  toJSON() {
-    return {
-      id: this.id,
-      title: this.title,
-      authorId: this.authorId,
-      isbn: this.isbn,
-      genre: this.genre,
-      publicationDate: this.publicationDate,
-      available: this.available,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-    };
-  }
-}
+// Instance method to check if book is available
+bookSchema.methods.isAvailable = function () {
+  return this.available;
+};
+
+// Instance method to toggle availability
+bookSchema.methods.toggleAvailability = function () {
+  this.available = !this.available;
+  return this.save();
+};
+
+const Book = mongoose.model('Book', bookSchema);
 
 export default Book;
