@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 dotenv.config();
 
-
 import swaggerJsdoc from 'swagger-jsdoc';
 import { serve, setup } from 'swagger-ui-express';
 
@@ -63,7 +62,7 @@ const swaggerOptions = {
             id: {
               type: 'string',
               description: 'Unique identifier for the book',
-              example: 'b1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443b05',
             },
             title: {
               type: 'string',
@@ -73,7 +72,7 @@ const swaggerOptions = {
             authorId: {
               type: 'string',
               description: 'ID of the author',
-              example: 'a1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443af7',
             },
             isbn: {
               type: 'string',
@@ -115,7 +114,7 @@ const swaggerOptions = {
             id: {
               type: 'string',
               description: 'Unique identifier for the author',
-              example: 'a1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443af7',
             },
             name: {
               type: 'string',
@@ -158,7 +157,7 @@ const swaggerOptions = {
             id: {
               type: 'string',
               description: 'Unique identifier for the user',
-              example: 'u1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443aff',
             },
             name: {
               type: 'string',
@@ -201,17 +200,17 @@ const swaggerOptions = {
             id: {
               type: 'string',
               description: 'Unique identifier for the borrow record',
-              example: 'br1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443b10',
             },
             userId: {
               type: 'string',
               description: 'ID of the user who borrowed the book',
-              example: 'u1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443aff',
             },
             bookId: {
               type: 'string',
               description: 'ID of the borrowed book',
-              example: 'b1234567-89ab-cdef-0123-456789abcdef',
+              example: '685e2710394df696a6443b05',
             },
             borrowDate: {
               type: 'string',
