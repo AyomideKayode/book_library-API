@@ -8,8 +8,32 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000",
+      "value": "http://localhost:3001",
       "type": "string"
+    },
+    {
+      "key": "authorId",
+      "value": "685e2710394df696a6443af7",
+      "type": "string",
+      "description": "Sample Author ObjectId"
+    },
+    {
+      "key": "bookId",
+      "value": "685e2710394df696a6443b05",
+      "type": "string",
+      "description": "Sample Book ObjectId"
+    },
+    {
+      "key": "userId",
+      "value": "685e2710394df696a6443aff",
+      "type": "string",
+      "description": "Sample User ObjectId"
+    },
+    {
+      "key": "borrowId",
+      "value": "685e2710394df696a6443b10",
+      "type": "string",
+      "description": "Sample Borrow Record ObjectId"
     }
   ],
   "item": [
@@ -98,7 +122,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"New Book Title\",\n  \"authorId\": \"a1234567-89ab-cdef-0123-456789abcdef\",\n  \"isbn\": \"978-1-234-56789-0\",\n  \"genre\": \"Fiction\",\n  \"publicationDate\": \"2024-01-01\"\n}"
+              "raw": "{\n  \"title\": \"New Book Title\",\n  \"authorId\": \"685e2710394df696a6443af7\",\n  \"isbn\": \"978-1-234-56789-0\",\n  \"genre\": \"Fiction\",\n  \"publicationDate\": \"2024-01-01\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/books",
