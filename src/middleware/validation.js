@@ -1,4 +1,10 @@
 import { body, param, query, validationResult } from 'express-validator';
+import mongoose from 'mongoose';
+
+// Custom ObjectId validator
+const isValidObjectId = (value) => {
+  return mongoose.Types.ObjectId.isValid(value);
+};
 
 // Validation middleware to check for validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -31,8 +37,8 @@ const bookValidationRules = () => {
       .trim()
       .notEmpty()
       .withMessage('Author ID is required')
-      .isUUID()
-      .withMessage('Author ID must be a valid UUID'),
+      .custom(isValidObjectId)
+      .withMessage('Author ID must be a valid ObjectId'),
     body('isbn')
       .trim()
       .notEmpty()
@@ -55,6 +61,25 @@ const bookValidationRules = () => {
       .optional()
       .isBoolean()
       .withMessage('Available must be a boolean value'),
+    body('description')
+      .optional()
+      .trim()
+      .isLength({ max: 1000 })
+      .withMessage('Description must not exceed 1000 characters'),
+    body('pages')
+      .optional()
+      .isInt({ min: 1, max: 10000 })
+      .withMessage('Pages must be between 1 and 10000'),
+    body('language')
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 30 })
+      .withMessage('Language must be between 1 and 30 characters'),
+    body('publisher')
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Publisher must be between 1 and 100 characters'),
   ];
 };
 
@@ -72,8 +97,8 @@ const bookUpdateValidationRules = () => {
       .trim()
       .notEmpty()
       .withMessage('Author ID cannot be empty')
-      .isUUID()
-      .withMessage('Author ID must be a valid UUID'),
+      .custom(isValidObjectId)
+      .withMessage('Author ID must be a valid ObjectId'),
     body('isbn')
       .optional()
       .trim()
@@ -98,6 +123,25 @@ const bookUpdateValidationRules = () => {
       .optional()
       .isBoolean()
       .withMessage('Available must be a boolean value'),
+    body('description')
+      .optional()
+      .trim()
+      .isLength({ max: 1000 })
+      .withMessage('Description must not exceed 1000 characters'),
+    body('pages')
+      .optional()
+      .isInt({ min: 1, max: 10000 })
+      .withMessage('Pages must be between 1 and 10000'),
+    body('language')
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 30 })
+      .withMessage('Language must be between 1 and 30 characters'),
+    body('publisher')
+      .optional()
+      .trim()
+      .isLength({ min: 1, max: 100 })
+      .withMessage('Publisher must be between 1 and 100 characters'),
   ];
 };
 
@@ -189,7 +233,7 @@ const userValidationRules = () => {
     body('phone')
       .optional()
       .trim()
-      .matches(/^[\+]?[1-9][\d]{0,15}$/)
+      .matches(/^[\+]?[1-9][\d\-\s\(\)]{0,20}$/)
       .withMessage('Invalid phone number format'),
   ];
 };
@@ -214,7 +258,7 @@ const userUpdateValidationRules = () => {
     body('phone')
       .optional()
       .trim()
-      .matches(/^[\+]?[1-9][\d]{0,15}$/)
+      .matches(/^[\+]?[1-9][\d\-\s\(\)]{0,20}$/)
       .withMessage('Invalid phone number format'),
   ];
 };
@@ -226,14 +270,14 @@ const borrowValidationRules = () => {
       .trim()
       .notEmpty()
       .withMessage('User ID is required')
-      .isUUID()
-      .withMessage('User ID must be a valid UUID'),
+      .custom(isValidObjectId)
+      .withMessage('User ID must be a valid ObjectId'),
     body('bookId')
       .trim()
       .notEmpty()
       .withMessage('Book ID is required')
-      .isUUID()
-      .withMessage('Book ID must be a valid UUID'),
+      .custom(isValidObjectId)
+      .withMessage('Book ID must be a valid ObjectId'),
     body('dueDate')
       .optional()
       .isISO8601()
@@ -254,15 +298,17 @@ const returnValidationRules = () => {
       .trim()
       .notEmpty()
       .withMessage('Borrow ID is required')
-      .isUUID()
-      .withMessage('Borrow ID must be a valid UUID'),
+      .custom(isValidObjectId)
+      .withMessage('Borrow ID must be a valid ObjectId'),
   ];
 };
 
 // Parameter validation rules
-const uuidParamValidation = (paramName) => {
+const objectIdParamValidation = (paramName) => {
   return [
-    param(paramName).isUUID().withMessage(`${paramName} must be a valid UUID`),
+    param(paramName)
+      .custom(isValidObjectId)
+      .withMessage(`${paramName} must be a valid ObjectId`),
   ];
 };
 
@@ -310,6 +356,6 @@ export {
   userUpdateValidationRules,
   borrowValidationRules,
   returnValidationRules,
-  uuidParamValidation,
+  objectIdParamValidation,
   searchQueryValidation,
 };
