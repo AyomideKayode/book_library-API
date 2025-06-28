@@ -5,7 +5,7 @@ import {
   authorValidationRules,
   authorUpdateValidationRules,
   handleValidationErrors,
-  uuidParamValidation,
+  objectIdParamValidation,
   searchQueryValidation,
 } from '../middleware/validation.js';
 
@@ -190,7 +190,7 @@ router.get('/stats', AuthorController.getAuthorStats);
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Author ID
  *     responses:
  *       200:
@@ -213,7 +213,7 @@ router.get('/stats', AuthorController.getAuthorStats);
  */
 router.get(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   AuthorController.getAuthorById
 );
@@ -292,7 +292,7 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Author ID
  *     requestBody:
  *       required: true
@@ -348,7 +348,7 @@ router.post(
  */
 router.put(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   authorUpdateValidationRules(),
   handleValidationErrors,
   AuthorController.updateAuthor
@@ -366,7 +366,7 @@ router.put(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Author ID
  *     responses:
  *       204:
@@ -380,7 +380,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   AuthorController.deleteAuthor
 );

@@ -5,7 +5,7 @@ import {
   bookValidationRules,
   bookUpdateValidationRules,
   handleValidationErrors,
-  uuidParamValidation,
+  objectIdParamValidation,
   searchQueryValidation,
 } from '../middleware/validation.js';
 
@@ -42,7 +42,8 @@ import {
  *         name: authorId
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *           example: '685e2710394df696a6443afd'
  *         description: Filter by author ID
  *       - in: query
  *         name: page
@@ -218,7 +219,8 @@ router.get('/stats', BookController.getBookStats);
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *           example: '685e48a11513b92d4fb2a32f'
  *         description: Book ID
  *     responses:
  *       200:
@@ -241,7 +243,7 @@ router.get('/stats', BookController.getBookStats);
  */
 router.get(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   BookController.getBookById
 );
@@ -269,8 +271,8 @@ router.get(
  *                 example: "The Great Gatsby"
  *               authorId:
  *                 type: string
- *                 format: uuid
- *                 example: "a1234567-89ab-cdef-0123-456789abcdef"
+ *                 pattern: '^[0-9a-fA-F]{24}$'
+ *                 example: "685e2710394df696a6443afd"
  *               isbn:
  *                 type: string
  *                 example: "978-0-7432-7356-5"
@@ -325,7 +327,8 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *           example: '685e48a11513b92d4fb2a32f'
  *         description: Book ID
  *     requestBody:
  *       required: true
@@ -339,8 +342,8 @@ router.post(
  *                 example: "The Great Gatsby (Updated)"
  *               authorId:
  *                 type: string
- *                 format: uuid
- *                 example: "a1234567-89ab-cdef-0123-456789abcdef"
+ *                 pattern: '^[0-9a-fA-F]{24}$'
+ *                 example: "685e2710394df696a6443afd"
  *               isbn:
  *                 type: string
  *                 example: "978-0-7432-7356-5"
@@ -387,7 +390,7 @@ router.post(
  */
 router.put(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   bookUpdateValidationRules(),
   handleValidationErrors,
   BookController.updateBook
@@ -405,7 +408,8 @@ router.put(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *           example: '685e48a11513b92d4fb2a32f'
  *         description: Book ID
  *     responses:
  *       204:
@@ -419,7 +423,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   BookController.deleteBook
 );

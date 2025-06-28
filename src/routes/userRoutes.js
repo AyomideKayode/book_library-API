@@ -5,7 +5,7 @@ import {
   userValidationRules,
   userUpdateValidationRules,
   handleValidationErrors,
-  uuidParamValidation,
+  objectIdParamValidation,
   searchQueryValidation,
 } from '../middleware/validation.js';
 
@@ -190,7 +190,7 @@ router.get('/stats', UserController.getUserStats);
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: User ID
  *     responses:
  *       200:
@@ -213,7 +213,7 @@ router.get('/stats', UserController.getUserStats);
  */
 router.get(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   UserController.getUserById
 );
@@ -288,7 +288,7 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: User ID
  *     requestBody:
  *       required: true
@@ -340,7 +340,7 @@ router.post(
  */
 router.put(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   userUpdateValidationRules(),
   handleValidationErrors,
   UserController.updateUser
@@ -358,7 +358,7 @@ router.put(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: User ID
  *     responses:
  *       204:
@@ -372,7 +372,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   UserController.deleteUser
 );

@@ -5,7 +5,7 @@ import {
   borrowValidationRules,
   returnValidationRules,
   handleValidationErrors,
-  uuidParamValidation,
+  objectIdParamValidation,
   searchQueryValidation,
 } from '../middleware/validation.js';
 
@@ -34,12 +34,12 @@ import {
  *             properties:
  *               userId:
  *                 type: string
- *                 format: uuid
- *                 example: "u1234567-89ab-cdef-0123-456789abcdef"
+ *                 pattern: "^[0-9a-fA-F]{24}$"
+ *                 example: "685e2710394df696a6443afe"
  *               bookId:
  *                 type: string
- *                 format: uuid
- *                 example: "b1234567-89ab-cdef-0123-456789abcdef"
+ *                 pattern: "^[0-9a-fA-F]{24}$"
+ *                 example: "685e4b1e680ac8eb77ff9b9d"
  *               dueDate:
  *                 type: string
  *                 format: date-time
@@ -94,7 +94,7 @@ router.post(
  *             properties:
  *               borrowId:
  *                 type: string
- *                 format: uuid
+ *                 pattern: "^[0-9a-fA-F]{24}$"
  *                 example: "br1234567-89ab-cdef-0123-456789abcdef"
  *     responses:
  *       200:
@@ -139,13 +139,13 @@ router.post(
  *         name: userId
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Filter by user ID
  *       - in: query
  *         name: bookId
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Filter by book ID
  *       - in: query
  *         name: status
@@ -218,7 +218,7 @@ router.get('/borrow-records', BorrowController.getAllBorrowRecords);
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Borrow record ID
  *     responses:
  *       200:
@@ -241,7 +241,7 @@ router.get('/borrow-records', BorrowController.getAllBorrowRecords);
  */
 router.get(
   '/borrow-records/:id',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   BorrowController.getBorrowRecordById
 );
@@ -258,7 +258,7 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Borrow record ID
  *     requestBody:
  *       required: true
@@ -300,7 +300,7 @@ router.get(
  */
 router.patch(
   '/borrow-records/:id/extend',
-  uuidParamValidation('id'),
+  objectIdParamValidation('id'),
   handleValidationErrors,
   BorrowController.extendDueDate
 );
@@ -317,7 +317,7 @@ router.patch(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: User ID
  *     responses:
  *       200:
@@ -336,7 +336,7 @@ router.patch(
  */
 router.get(
   '/users/:userId/borrow-history',
-  uuidParamValidation('userId'),
+  objectIdParamValidation('userId'),
   handleValidationErrors,
   BorrowController.getUserBorrowHistory
 );
@@ -353,7 +353,7 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
- *           format: uuid
+ *           pattern: "^[0-9a-fA-F]{24}$"
  *         description: Book ID
  *     responses:
  *       200:
@@ -372,7 +372,7 @@ router.get(
  */
 router.get(
   '/books/:bookId/borrow-history',
-  uuidParamValidation('bookId'),
+  objectIdParamValidation('bookId'),
   handleValidationErrors,
   BorrowController.getBookBorrowHistory
 );
