@@ -143,7 +143,7 @@ class BorrowService {
 
     try {
       // Set default due date if not provided (14 days from now)
-      const dueDate = borrowData.dueDate 
+      const dueDate = borrowData.dueDate
         ? new Date(borrowData.dueDate)
         : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
