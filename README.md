@@ -1,148 +1,557 @@
 # Book Library RESTful API
 
-A comprehensive RESTful API for managing a book library system, built following industry best practices and REST principles.
+A comprehensive RESTful API for managing a book library system, built following industry best practices and REST principles. This project demonstrates a complete evolution from in-memory storage to MongoDB, showcasing modern Node.js architecture patterns.
 
-## 🚀 Features
+## 🎯 Project Overview
 
-### Must Have ✅
+### Current Implementation (MongoDB-Based)
 
-- ✅ RESTful CRUD endpoints for books (`/api/books`)
-- ✅ RESTful CRUD endpoints for authors (`/api/authors`)
-- ✅ RESTful CRUD endpoints for users (`/api/users`)
-- ✅ Borrowing and returning of books (`/api/borrow`, `/api/return`)
-- ✅ Appropriate HTTP methods (GET, POST, PUT, DELETE)
-- ✅ Correct HTTP status codes (200, 201, 204, 400, 404, 500, etc.)
-- ✅ OpenAPI/Swagger-based API documentation
-- ✅ Comprehensive error handling with meaningful messages
-- ✅ Postman collection for endpoint testing
+**Production-Ready Features:**
 
-### Should Have ✅
+- 🏗️ **Modern Architecture**: Layered design (Routes → Controllers → Services → Models)
+- 🗄️ **MongoDB Integration**: Full persistence with Mongoose ODM
+- 🔗 **Data Relationships**: Proper foreign key relationships between entities
+- 📊 **Real-Time Availability**: Dynamic book availability tracking
+- 🔍 **Advanced Search**: Full-text search across books, authors, and users
+- 📈 **Analytics**: Borrowing statistics and user engagement metrics
+- 🛡️ **Data Validation**: Comprehensive input validation and error handling
+- 📚 **Complete Documentation**: Interactive Swagger UI and Postman collection
 
-- ✅ Track book availability status (`available`: true/false)
-- ✅ Prevent borrowing of unavailable books
-- ✅ Associate books with authors
-- ✅ Associate borrowing records with users
+### Legacy Implementation (Reference)
 
-### Could Have ✅
+The project initially used in-memory Maps with UUIDs, providing a complete working API that has been successfully migrated to MongoDB while maintaining full backward compatibility.
 
-- ✅ Search/filter endpoints (search by title, author, genre)
-- ✅ Pagination support
-- ✅ Statistics endpoints
-- ✅ Overdue book tracking
-- ✅ Borrow history tracking
+## 🚀 Features & Capabilities
+
+### Core API Features ✅
+
+- ✅ **Complete CRUD Operations** for Books, Authors, Users, and Borrow Records
+- ✅ **MongoDB Persistence** with Mongoose ODM and proper schema validation
+- ✅ **RESTful Design** following HTTP standards and best practices
+- ✅ **Data Relationships** with foreign key constraints and referential integrity
+- ✅ **Interactive Documentation** via Swagger/OpenAPI 3.0
+- ✅ **Postman Collection** with comprehensive test scenarios
+
+### Advanced Functionality ✅
+
+- ✅ **Smart Search & Filtering** across all entities with MongoDB text indexes
+- ✅ **Pagination Support** with configurable page sizes and offset
+- ✅ **Borrowing System** with availability tracking and due date management
+- ✅ **User History Tracking** for borrowing patterns and analytics
+- ✅ **Overdue Management** with automatic status updates
+- ✅ **Statistics Dashboard** showing system usage and trends
+
+### Business Logic & Rules ✅
+
+- ✅ **Availability Tracking**: Real-time book availability with borrowing status
+- ✅ **Duplicate Prevention**: Users cannot borrow the same book multiple times
+- ✅ **Due Date Management**: 14-day default with extension capabilities
+- ✅ **Data Integrity**: Unique constraints on ISBN, author email, user email
+- ✅ **Error Handling**: Meaningful error messages with proper HTTP status codes
+- ✅ **Validation**: Comprehensive input validation with detailed feedback
 
 ## 🛠️ Technology Stack
 
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Documentation**: Swagger/OpenAPI 3.0
+**Backend & Framework:**
+
+- **Runtime**: Node.js (v18+)
+- **Framework**: Express.js (v4.18+)
+- **Database**: MongoDB with Mongoose ODM (v7+)
 - **Validation**: express-validator
 - **Security**: Helmet, CORS
-- **Logging**: Morgan
-- **Development**: Nodemon
+
+**Documentation & Testing:**
+
+- **API Documentation**: Swagger/OpenAPI 3.0
+- **Testing**: Postman Collection
+- **Logging**: Morgan (HTTP request logger)
+- **Development**: Nodemon (auto-restart)
+
+**Database Features:**
+
+- **Schemas**: Mongoose with validation and relationships
+- **Indexes**: Optimized for search and performance
+- **Constraints**: Unique fields and referential integrity
+- **Migrations**: Automated schema management
 
 ## 📋 Prerequisites
 
-- Node.js (v12 or higher)
-- npm or yarn
+Before running this project, ensure you have:
 
-## 🔧 Installation
+- **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
+- **npm** or **yarn** package manager
+- **MongoDB** access (Atlas cloud or local instance)
+- **Git** for cloning the repository
 
-1. **Clone the repository**
+## 🔧 Quick Start
 
-   ```bash
-   git clone <repository-url>
-   cd book-library-api
-   ```
+### 1. Clone and Install
 
-2. **Install dependencies**
+```bash
+# Clone the repository
+git clone <repository-url>
+cd book-library-api
 
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-
-   ```bash
-   cp .env.example .env
-   # Edit .env file with your configuration
-   ```
-
-4. **Start the server**
-
-   ```bash
-   # Development mode with auto-reload
-   npm run dev
-
-   # Production mode
-   npm start
-   ```
-
-## 🌐 API Endpoints
-
-### Base URL
-
-```sh
-http://localhost:3000
+# Install dependencies
+npm install
 ```
 
-### Health Check
+### 2. Database Setup
 
-- `GET /health` - API health status
+Choose one of the following MongoDB options:
 
-### API Documentation
+#### **Option A: MongoDB Atlas (Recommended)**
 
-- `GET /api-docs` - Interactive Swagger UI documentation
-- `GET /` - Redirects to API documentation
+1. Create a free account at [MongoDB Atlas](https://cloud.mongodb.com/)
+2. Create a new cluster (free tier available)
+3. Create a database user with read/write permissions
+4. Whitelist your IP address (or use 0.0.0.0/0 for development)
+5. Get your connection string from the "Connect" button
 
-### Books
+#### **Option B: Local MongoDB**
 
-- `GET /api/books` - Get all books (with filters and pagination)
-- `GET /api/books/search` - Search books
-- `GET /api/books/stats` - Get book statistics
-- `GET /api/books/{id}` - Get book by ID
-- `POST /api/books` - Create a new book
-- `PUT /api/books/{id}` - Update book by ID
-- `DELETE /api/books/{id}` - Delete book by ID
+```bash
+# Install MongoDB locally (Ubuntu/Debian)
+sudo apt-get install mongodb
 
-### Authors
+# Start MongoDB service
+sudo systemctl start mongodb
+sudo systemctl enable mongodb
 
-- `GET /api/authors` - Get all authors (with filters and pagination)
-- `GET /api/authors/search` - Search authors
-- `GET /api/authors/stats` - Get author statistics
-- `GET /api/authors/{id}` - Get author by ID
-- `POST /api/authors` - Create a new author
-- `PUT /api/authors/{id}` - Update author by ID
-- `DELETE /api/authors/{id}` - Delete author by ID
+# Verify installation
+mongo --version
+```
 
-### Users
+### 3. Environment Configuration
 
-- `GET /api/users` - Get all users (with filters and pagination)
-- `GET /api/users/search` - Search users
-- `GET /api/users/stats` - Get user statistics
-- `GET /api/users/{id}` - Get user by ID
-- `POST /api/users` - Create a new user
-- `PUT /api/users/{id}` - Update user by ID
-- `DELETE /api/users/{id}` - Delete user by ID
+```bash
+# Copy environment template
+cp .env.example .env
 
-### Borrowing
+# Edit .env with your settings
+nano .env
+```
 
-- `POST /api/borrow` - Borrow a book
-- `POST /api/return` - Return a borrowed book
-- `GET /api/borrow-records` - Get all borrow records (with filters)
-- `GET /api/borrow-records/{id}` - Get borrow record by ID
-- `PATCH /api/borrow-records/{id}/extend` - Extend due date
-- `GET /api/users/{userId}/borrow-history` - Get user's borrow history
-- `GET /api/books/{bookId}/borrow-history` - Get book's borrow history
-- `GET /api/overdue-books` - Get all overdue books
-- `GET /api/borrow-stats` - Get borrowing statistics
+**Required Environment Variables:**
 
-## 📖 API Documentation
+```env
+# Server Configuration
+NODE_ENV=development
+PORT=3001
 
-The API includes comprehensive OpenAPI/Swagger documentation available at:
+# MongoDB Configuration (choose one)
+# For MongoDB Atlas:
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/book-library
 
-- **Interactive Documentation**: <http://localhost:3000/api-docs>
-- **JSON Specification**: <http://localhost:3000/api-docs.json>
+# For Local MongoDB:
+MONGODB_URI=mongodb://localhost:27017/book-library
+
+# Optional: Database Name
+DB_NAME=book-library
+```
+
+### 4. Database Initialization
+
+```bash
+# Run database migrations (creates indexes and schema)
+npm run migrate
+
+# Seed the database with sample data
+npm run seed
+
+# Verify database setup
+npm run db-status
+```
+
+### 5. Start the Application
+
+```bash
+# Development mode (with auto-restart)
+npm run dev
+
+# Production mode
+npm start
+```
+
+**The API will be available at:**
+
+- **API Base URL**: <http://localhost:3001/api>
+- **Swagger Documentation**: <http://localhost:3001/api-docs>
+- **Health Check**: <http://localhost:3001/health>
+
+## 🔍 API Documentation & Testing
+
+### Interactive Documentation
+
+Visit the **Swagger UI** at <http://localhost:3001/api-docs> for:
+
+- Complete API reference with all endpoints
+- Interactive testing interface
+- Request/response schemas
+- Authentication examples
+- Real-time API exploration
+
+### Postman Collection
+
+Import the Postman collection from `docs/Book-Library-API.postman_collection.json`:
+
+1. Open Postman
+2. Import → Upload Files → Select the collection file
+3. Set environment variable `baseUrl` to `http://localhost:3001`
+4. Run the complete test suite
+
+## 📚 API Reference
+
+### Core Endpoints
+
+| Category      | Method | Endpoint                  | Description                      |
+| ------------- | ------ | ------------------------- | -------------------------------- |
+| **Health**    | GET    | `/health`                 | Service health status            |
+| **Authors**   | GET    | `/api/authors`            | List all authors with pagination |
+| **Authors**   | POST   | `/api/authors`            | Create new author                |
+| **Authors**   | GET    | `/api/authors/{id}`       | Get author by ID                 |
+| **Authors**   | PUT    | `/api/authors/{id}`       | Update author                    |
+| **Authors**   | DELETE | `/api/authors/{id}`       | Delete author                    |
+| **Books**     | GET    | `/api/books`              | List all books with search       |
+| **Books**     | POST   | `/api/books`              | Create new book                  |
+| **Books**     | GET    | `/api/books/{id}`         | Get book by ID                   |
+| **Books**     | PUT    | `/api/books/{id}`         | Update book                      |
+| **Books**     | DELETE | `/api/books/{id}`         | Delete book                      |
+| **Users**     | GET    | `/api/users`              | List all users                   |
+| **Users**     | POST   | `/api/users`              | Create new user                  |
+| **Users**     | GET    | `/api/users/{id}`         | Get user by ID                   |
+| **Users**     | PUT    | `/api/users/{id}`         | Update user                      |
+| **Users**     | DELETE | `/api/users/{id}`         | Delete user                      |
+| **Borrowing** | POST   | `/api/borrow`             | Borrow a book                    |
+| **Borrowing** | POST   | `/api/return`             | Return a book                    |
+| **Borrowing** | GET    | `/api/borrow/records`     | Get borrow records               |
+| **Borrowing** | PUT    | `/api/borrow/{id}/extend` | Extend due date                  |
+
+### Real API Examples
+
+_The following examples use real requests and responses from our comprehensive API testing:_
+
+#### 1. Create Author
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/authors \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Isaac Asimov",
+    "email": "isaac.asimov@authors.com",
+    "biography": "American science fiction author and biochemist."
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "6757d9df2043b4c2e5dc6c89",
+    "name": "Isaac Asimov",
+    "email": "isaac.asimov@authors.com",
+    "biography": "American science fiction author and biochemist.",
+    "books": [],
+    "createdAt": "2024-12-10T10:30:07.542Z",
+    "updatedAt": "2024-12-10T10:30:07.542Z"
+  },
+  "message": "Author created successfully"
+}
+```
+
+#### 2. Create Book
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/books \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "The Caves of Steel",
+    "isbn": "978-0553293395",
+    "author": "6757d9df2043b4c2e5dc6c89",
+    "genre": "Science Fiction",
+    "publishedYear": 1954,
+    "availableCopies": 3
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "6757da422043b4c2e5dc6c8f",
+    "title": "The Caves of Steel",
+    "isbn": "978-0553293395",
+    "author": {
+      "_id": "6757d9df2043b4c2e5dc6c89",
+      "name": "Isaac Asimov",
+      "email": "isaac.asimov@authors.com"
+    },
+    "genre": "Science Fiction",
+    "publishedYear": 1954,
+    "totalCopies": 3,
+    "availableCopies": 3,
+    "isAvailable": true,
+    "createdAt": "2024-12-10T10:31:46.991Z",
+    "updatedAt": "2024-12-10T10:31:46.991Z"
+  },
+  "message": "Book created successfully"
+}
+```
+
+#### 3. Create User
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1-555-123-4567"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "6757d8622043b4c2e5dc6c7f",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1-555-123-4567",
+    "membershipDate": "2024-12-10T10:25:22.891Z",
+    "createdAt": "2024-12-10T10:25:22.891Z",
+    "updatedAt": "2024-12-10T10:25:22.891Z"
+  },
+  "message": "User created successfully"
+}
+```
+
+#### 4. Borrow Book
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/borrow \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": "6757d8622043b4c2e5dc6c7f",
+    "bookId": "6757da422043b4c2e5dc6c8f"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "6757dbb62043b4c2e5dc6c97",
+    "user": {
+      "_id": "6757d8622043b4c2e5dc6c7f",
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    },
+    "book": {
+      "_id": "6757da422043b4c2e5dc6c8f",
+      "title": "The Caves of Steel",
+      "author": "Isaac Asimov"
+    },
+    "borrowDate": "2024-12-10T10:38:14.045Z",
+    "dueDate": "2024-12-24T10:38:14.045Z",
+    "status": "borrowed",
+    "createdAt": "2024-12-10T10:38:14.049Z",
+    "updatedAt": "2024-12-10T10:38:14.049Z"
+  },
+  "message": "Book borrowed successfully"
+}
+```
+
+#### 5. Return Book
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/return \
+  -H "Content-Type: application/json" \
+  -d '{
+    "borrowId": "6757dbb62043b4c2e5dc6c97"
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "6757dbb62043b4c2e5dc6c97",
+    "user": "6757d8622043b4c2e5dc6c7f",
+    "book": "6757da422043b4c2e5dc6c8f",
+    "borrowDate": "2024-12-10T10:38:14.045Z",
+    "dueDate": "2024-12-24T10:38:14.045Z",
+    "returnDate": "2024-12-10T10:44:46.883Z",
+    "status": "returned",
+    "createdAt": "2024-12-10T10:38:14.049Z",
+    "updatedAt": "2024-12-10T10:44:46.883Z"
+  },
+  "message": "Book returned successfully"
+}
+```
+
+#### 6. Search Books
+
+**Request:**
+
+```bash
+curl "http://localhost:3001/api/books?search=caves&genre=Science%20Fiction&page=1&limit=10"
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "6757da422043b4c2e5dc6c8f",
+      "title": "The Caves of Steel",
+      "isbn": "978-0553293395",
+      "author": {
+        "_id": "6757d9df2043b4c2e5dc6c89",
+        "name": "Isaac Asimov"
+      },
+      "genre": "Science Fiction",
+      "publishedYear": 1954,
+      "availableCopies": 3,
+      "isAvailable": true
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 1
+  },
+  "message": "Books retrieved successfully"
+}
+```
+
+#### 7. Error Handling Example
+
+**Request (Duplicate Email):**
+
+```bash
+curl -X POST http://localhost:3001/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1234567890"
+  }'
+```
+
+**Response (409 Conflict):**
+
+```json
+{
+  "success": false,
+  "error": "User already exists with this email",
+  "code": "DUPLICATE_USER",
+  "details": {
+    "field": "email",
+    "value": "john.doe@example.com"
+  }
+}
+```
+
+## 🗄️ Database Schema
+
+The API uses MongoDB with Mongoose ODM. The database consists of four main collections:
+
+### Authors Collection
+
+```javascript
+{
+  _id: ObjectId,
+  name: String (required),
+  email: String (required, unique),
+  biography: String,
+  birthDate: Date,
+  nationality: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Books Collection
+
+```javascript
+{
+  _id: ObjectId,
+  title: String (required),
+  isbn: String (required, unique),
+  author: ObjectId (ref: 'Author', required),
+  publishedDate: Date,
+  genre: String,
+  pages: Number,
+  description: String,
+  copiesAvailable: Number (default: 1),
+  totalCopies: Number (default: 1),
+  language: String (default: 'English'),
+  publisher: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Users Collection
+
+```javascript
+{
+  _id: ObjectId,
+  name: String (required),
+  email: String (required, unique),
+  phone: String,
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String
+  },
+  membershipDate: Date (default: now),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### BorrowRecords Collection
+
+```javascript
+{
+  _id: ObjectId,
+  user: ObjectId (ref: 'User', required),
+  book: ObjectId (ref: 'Book', required),
+  borrowDate: Date (default: now),
+  dueDate: Date (required),
+  returnDate: Date,
+  status: String (enum: ['borrowed', 'returned', 'overdue'], default: 'borrowed'),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
 ## 🔍 Query Parameters
 
@@ -154,85 +563,83 @@ The API includes comprehensive OpenAPI/Swagger documentation available at:
 ### Sorting
 
 - `sort` - Sort field (prefix with `-` for descending order)
-  - Books: `title`, `genre`, `createdAt`, `updatedAt`
-  - Authors: `name`, `email`, `createdAt`, `updatedAt`
-  - Users: `name`, `email`, `membershipDate`, `createdAt`, `updatedAt`
+  - Books: `title`, `genre`, `publishedYear`, `createdAt`
+  - Authors: `name`, `email`, `birthDate`, `createdAt`
+  - Users: `name`, `email`, `membershipDate`, `createdAt`
 
 ### Filtering
 
-- `q` - Search query (searches across relevant fields)
+- `search` - Search query (full-text search across relevant fields)
 - `genre` - Filter books by genre
+- `author` - Filter books by author ID
 - `available` - Filter books by availability (true/false)
-- `authorId` - Filter books by author ID
-- `userId` - Filter borrow records by user ID
-- `bookId` - Filter borrow records by book ID
-- `status` - Filter borrow records by status (active/returned/overdue)
+- `status` - Filter borrow records by status (borrowed/returned/overdue)
 
-## 📝 Example Requests
+## 🧪 Testing & Development
 
-### Create a Book
+### Development Scripts
 
 ```bash
-curl -X POST http://localhost:3000/api/books \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "The Great Gatsby",
-    "authorId": "a1234567-89ab-cdef-0123-456789abcdef",
-    "isbn": "978-0-7432-7356-5",
-    "genre": "Fiction",
-    "publicationDate": "1925-04-10"
-  }'
+# Development with auto-reload
+npm run dev
+
+# Production server
+npm start
+
+# Database operations
+npm run migrate      # Run migrations
+npm run seed        # Seed sample data
+npm run db:status   # Check database status
+
+# Code quality
+npm run lint        # Check code style
+npm run lint:fix    # Fix linting issues
+npm run format      # Format code
 ```
 
-### Borrow a Book
+### Project Structure
 
-```bash
-curl -X POST http://localhost:3000/api/borrow \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "e80194b5-c236-46f0-a7f6-bf112ceb2054",
-    "bookId": "bdf2529c-b42a-46ee-b888-0be48a2945d9"
-  }'
+```text
+book-library-api/
+├── src/
+│   ├── config/         # Database and app configuration
+│   ├── models/         # Mongoose schemas
+│   ├── services/       # Business logic layer
+│   ├── controllers/    # Request handlers
+│   ├── routes/         # API route definitions
+│   ├── middleware/     # Custom middleware
+│   └── app.js         # Express app configuration
+├── scripts/
+│   ├── migrate.js     # Database migration script
+│   └── seed.js        # Data seeding script
+├── docs/
+│   ├── postman/       # Postman collection
+│   └── examples/      # API usage examples
+└── server.js          # Application entry point
 ```
 
-```bash
-  {"success":true,"data":{"id":"c051564d-de92-4824-8813-05ca5e4df8ff","userId":"e80194b5-c236-46f0-a7f6-bf112ceb2054","bookId":"bdf2529c-b42a-46ee-b888-0be48a2945d9","borrowDate":"2025-06-26T02:43:54.059Z","dueDate":"2025-07-10T02:43:54.059Z","returnDate":null,"status":"active","createdAt":"2025-06-26T02:43:54.059Z","updatedAt":"2025-06-26T02:43:54.059Z"},"message":"Book borrowed successfully"}
-```
+## ⚙️ Configuration
 
-### Return a Book
+### Environment Variables
 
-```bash
-curl -X POST http://localhost:3000/api/return \
-  -H "Content-Type: application/json" \
-  -d '{
-    "borrowId":"c051564d-de92-4824-8813-05ca5e4df8ff"
-  }'
-```
+| Variable      | Default                                  | Description               |
+| ------------- | ---------------------------------------- | ------------------------- |
+| `NODE_ENV`    | `development`                            | Application environment   |
+| `PORT`        | `3001`                                   | Server port               |
+| `MONGODB_URI` | `mongodb://localhost:27017/book-library` | MongoDB connection string |
+| `DB_NAME`     | `book-library`                           | Database name             |
 
-```bash
-{"success":true,"data":{"id":"c051564d-de92-4824-8813-05ca5e4df8ff","userId":"e80194b5-c236-46f0-a7f6-bf112ceb2054","bookId":"bdf2529c-b42a-46ee-b888-0be48a2945d9","borrowDate":"2025-06-26T02:43:54.059Z","dueDate":"2025-07-10T02:43:54.059Z","returnDate":"2025-06-26T02:44:46.883Z","status":"returned","createdAt":"2025-06-26T02:43:54.059Z","updatedAt":"2025-06-26T02:44:46.883Z"},"message":"Book returned successfully"}
-```
+### MongoDB Connection Examples
 
-### Search Books
+```env
+# Local MongoDB
+MONGODB_URI=mongodb://localhost:27017/book-library
 
-```bash
-curl -X GET "http://localhost:3000/api/books/search?q=gatsby&page=1&limit=10"
-```
+# MongoDB Atlas
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/book-library
 
-```bash
-curl -X GET "http://localhost:3000/api/books/search?q=1984"
-
-{"success":true,"data":[{"id":"bdf2529c-b42a-46ee-b888-0be48a2945d9","title":"1984","authorId":"a3234567-89ab-cdef-0123-456789abcdef","isbn":"978-0-452-28423-4","genre":"Dystopian Fiction","publicationDate":"1949-06-08","available":true,"createdAt":"2025-06-26T02:40:50.447Z","updatedAt":"2025-06-26T02:44:46.884Z"}],"pagination":{"currentPage":1,"totalPages":1,"totalItems":1,"itemsPerPage":10,"hasNext":false,"hasPrev":false},"message":"Found 1 books matching \"1984\""}
-```
-
-### Create a User
-
-```bash
-curl -X POST http://localhost:3000/api/users -H "Content-Type: application/json" -d '{"name":"John Doe","email":"johndoe123@example.com","phone":"+1234567890"}'
-```
-
-```bash
-{"success":true,"data":{"id":"e80194b5-c236-46f0-a7f6-bf112ceb2054","name":"John Doe","email":"johndoe123@example.com","phone":"+1234567890","membershipDate":"2025-06-26","createdAt":"2025-06-26T02:43:32.946Z","updatedAt":"2025-06-26T02:43:32.946Z"},"message":"User created successfully"}
+# MongoDB with authentication
+MONGODB_URI=mongodb://username:password@localhost:27017/book-library
 ```
 
 ## 🔒 HTTP Status Codes
@@ -263,121 +670,133 @@ All errors follow a consistent format:
 }
 ```
 
-## 🧪 Testing
+## 🚀 Deployment (...in progress)
 
-### Using Postman
+### Using Docker
 
-1. Import the Postman collection from `/docs/Book-Library-API.postman_collection.json`
-2. Set up environment variables in Postman
-3. Run the collection to test all endpoints
-
-### Manual Testing
-
-Use the interactive Swagger UI at <http://localhost:3000/api-docs> to test endpoints directly in your browser.
-
-## 📁 Project Structure
-
-```sh
-book-library-api/
-├── src/
-│   ├── controllers/        # Request handlers
-│   ├── middleware/         # Custom middleware
-│   ├── models/            # Data models
-│   ├── routes/            # Route definitions
-│   ├── services/          # Business logic
-│   └── app.js             # Express app configuration
-├── docs/                  # Documentation files
-├── server.js              # Server entry point
-├── package.json           # Dependencies and scripts
-├── .env                   # Environment variables
-└── README.md              # This file
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3001
+CMD ["npm", "start"]
 ```
-
-## 🏗️ Architecture
-
-The API follows a layered architecture:
-
-1. **Routes** - Define endpoints and validate requests
-2. **Controllers** - Handle HTTP requests/responses
-3. **Services** - Implement business logic
-4. **Models** - Define data structures
-5. **Middleware** - Handle cross-cutting concerns
-
-## 🔄 Data Flow
-
-1. Client makes HTTP request
-2. Route validation middleware validates input
-3. Controller processes request
-4. Service implements business logic
-5. Model handles data operations
-6. Response sent back to client
-
-## 🎯 REST Principles Adherence
-
-- **Resource-based URLs**: `/api/books`, `/api/authors`, `/api/users`
-- **HTTP methods**: GET, POST, PUT, DELETE for CRUD operations
-- **Stateless**: Each request contains all necessary information
-- **Uniform interface**: Consistent response formats and error handling
-- **HATEOAS**: Links provided in responses (where applicable)
-
-## 🔧 Configuration
-
-Environment variables in `.env`:
-
-```env
-PORT=3000
-NODE_ENV=development
-API_BASE_URL=http://localhost:3000
-```
-
-## 🚀 Deployment
-
-### Development
 
 ```bash
-npm run dev
+# Build and run
+docker build -t book-library-api .
+docker run -p 3001:3001 -e MONGODB_URI=your-connection-string book-library-api
 ```
 
-### Production
+## 🐛 Troubleshooting
 
-```bash
-npm start
-```
+### Common Issues
 
-## 📚 Sample Data
+1. **MongoDB Connection Failed**
 
-The API comes with pre-loaded sample data:
+   ```bash
+   # Check MongoDB status
+   mongosh --eval "db.runCommand('ping')"
 
-- 3 sample authors
-- 3 sample books
-- 3 sample users
+   # Verify connection string
+   echo $MONGODB_URI
+   ```
+
+2. **Port Already in Use**
+
+   ```bash
+   # Find process using port 3001
+   lsof -i :3001
+
+   # Kill process
+   kill -9 <PID>
+   ```
+
+3. **Validation Errors**
+   - Check request body format
+   - Verify required fields
+   - Ensure ObjectId format for references
+
+## 📈 Legacy Implementation (In-Memory Maps)
+
+### Historical Context
+
+The project originally used in-memory Maps for data storage during Phase 1:
+
+**Features:**
+
+- **Rapid Prototyping**: No database setup required
+- **UUID Identification**: Universally unique identifiers
+- **Complete CRUD**: Full REST API functionality
+- **Development Focus**: Pure API design principles
+
+**Limitations:**
+
+- **No Persistence**: Data lost on server restart
+- **No Scalability**: Single instance limitation
+- **No Relationships**: Limited data modeling
+- **Memory Constraints**: RAM-based storage limits
+
+**Migration Benefits:**
+
+- **Data Persistence**: Permanent data storage
+- **Scalability**: Production-ready architecture
+- **Rich Relationships**: Complex data modeling
+- **Performance**: Optimized queries and indexing
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+### Development Workflow
+
+1. **Fork the repository**
+2. **Create feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make changes and test thoroughly**
+4. **Run linting**: `npm run lint:fix`
+5. **Commit changes**: `git commit -m 'Add amazing feature'`
+6. **Push to branch**: `git push origin feature/amazing-feature`
+7. **Open Pull Request**
+
+### Code Standards
+
+- Follow **RESTful API principles**
+- Use **async/await** for asynchronous operations
+- Include **comprehensive error handling**
+- Add **JSDoc comments** for functions
+- Follow **MongoDB naming conventions**
+- Write **meaningful commit messages**
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📞 Support
+## 🙏 Acknowledgments
 
-For support, please create an issue on the repository or contact the development team.
+- **Express.js** for the robust web framework
+- **MongoDB** and **Mongoose** for excellent database tools
+- **Swagger UI** for interactive API documentation
+- **Node.js Community** for extensive package ecosystem
 
----
+## 📞 Support & Contact
 
-## **Happy coding! 📚✨**
+For questions, issues, or contributions:
+
+- **Issues**: [GitHub Issues](repository-url/issues)
+- **API Documentation**: <http://localhost:3001/api-docs>
+- **Postman Collection**: `docs/Book-Library-API.postman_collection.json`
 
 ## 📚 Additional Documentation
 
-- **[Project Development Journey](docs/PROJECT_DEVELOPMENT_JOURNEY.md)** - Complete documentation of the development process from inception to completion
-- **[Error Handling Examples](docs/error-handling-examples.md)** - Comprehensive error handling documentation with examples
-- **[Postman Collection](docs/Book-Library-API.postman_collection.json)** - Ready-to-use API testing collection
+- **[Project Development Journey](PROJECT_DEVELOPMENT_JOURNEY.md)** - Complete development process documentation
+- **[Error Handling Examples](docs/error-handling-examples.md)** - Comprehensive error scenarios and responses
+- **[Testing Report](docs/TESTING_REPORT.md)** - Detailed testing and troubleshooting documentation
+- **[Migration Summary](docs/MIGRATION_SUMMARY.md)** - MongoDB migration process and decisions
 
 ## 🎯 Project Status
 
 ✅ **COMPLETED** - All deliverables have been successfully implemented and tested.
+
+---
+
+- **Built with ❤️ by [Ayomide Kayode](https://x.com/Ayomide_KayoDev) using Node.js, Express.js, and MongoDB**

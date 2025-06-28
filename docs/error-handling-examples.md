@@ -1,6 +1,6 @@
 # Error Handling Examples
 
-This document provides examples of how the Book Library API handles various error scenarios with consistent response formats.
+This document provides examples of how the Book Library API handles various error scenarios with consistent response formats using MongoDB and ObjectId validation.
 
 ## Error Response Format
 
@@ -36,8 +36,11 @@ curl -X POST http://localhost:3001/api/users \
   "code": "VALIDATION_ERROR",
   "details": [
     {
-      "message": "Invalid email format",
-      "value": "invalid-email"
+      "type": "field",
+      "value": "invalid-email",
+      "msg": "Invalid email format",
+      "path": "email",
+      "location": "body"
     }
   ]
 }
@@ -62,23 +65,27 @@ curl -X POST http://localhost:3001/api/books \
   "code": "VALIDATION_ERROR",
   "details": [
     {
-      "message": "Author ID is required",
-      "field": "authorId"
+      "type": "field",
+      "msg": "Author is required",
+      "path": "author",
+      "location": "body"
     },
     {
-      "message": "ISBN is required",
-      "field": "isbn"
+      "type": "field",
+      "msg": "ISBN is required",
+      "path": "isbn",
+      "location": "body"
     }
   ]
 }
 ```
 
-### Invalid UUID Format
+### Invalid ObjectId Format
 
 **Request:**
 
 ```bash
-curl -X GET http://localhost:3001/api/books/invalid-uuid
+curl -X GET http://localhost:3001/api/books/invalid-objectid
 ```
 
 **Response (400 Bad Request):**
@@ -90,8 +97,40 @@ curl -X GET http://localhost:3001/api/books/invalid-uuid
   "code": "VALIDATION_ERROR",
   "details": [
     {
-      "message": "Invalid UUID format",
-      "value": "invalid-uuid"
+      "type": "field",
+      "value": "invalid-objectid",
+      "msg": "Invalid id format",
+      "path": "id",
+      "location": "params"
+    }
+  ]
+}
+```
+
+### Invalid Phone Number Format
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com","phone":"invalid-phone"}'
+```
+
+**Response (400 Bad Request):**
+
+```json
+{
+  "success": false,
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": [
+    {
+      "type": "field",
+      "value": "invalid-phone",
+      "msg": "Invalid phone number format",
+      "path": "phone",
+      "location": "body"
     }
   ]
 }
@@ -104,7 +143,7 @@ curl -X GET http://localhost:3001/api/books/invalid-uuid
 **Request:**
 
 ```bash
-curl -X GET http://localhost:3001/api/books/12345678-1234-1234-1234-123456789012
+curl -X GET http://localhost:3001/api/books/6757da422043b4c2e5dc6c8f
 ```
 
 **Response (404 Not Found):**
@@ -123,7 +162,7 @@ curl -X GET http://localhost:3001/api/books/12345678-1234-1234-1234-123456789012
 **Request:**
 
 ```bash
-curl -X GET http://localhost:3001/api/authors/12345678-1234-1234-1234-123456789012
+curl -X GET http://localhost:3001/api/authors/6757d9df2043b4c2e5dc6c89
 ```
 
 **Response (404 Not Found):**
@@ -142,7 +181,7 @@ curl -X GET http://localhost:3001/api/authors/12345678-1234-1234-1234-1234567890
 **Request:**
 
 ```bash
-curl -X GET http://localhost:3001/api/users/12345678-1234-1234-1234-123456789012
+curl -X GET http://localhost:3001/api/users/6757d8622043b4c2e5dc6c7f
 ```
 
 **Response (404 Not Found):**
@@ -156,26 +195,74 @@ curl -X GET http://localhost:3001/api/users/12345678-1234-1234-1234-123456789012
 }
 ```
 
+### Borrow Record Not Found
+
+**Request:**
+
+```bash
+curl -X GET http://localhost:3001/api/borrow-records/6757dbb62043b4c2e5dc6c97
+```
+
+**Response (404 Not Found):**
+
+```json
+{
+  "success": false,
+  "error": "Borrow record not found",
+  "code": "BORROW_RECORD_NOT_FOUND",
+  "details": null
+}
+```
+
+{
+
 ## Business Logic Errors
 
-### Duplicate Email
+### Duplicate Email (User Registration)
 
 **Request:**
 
 ```bash
 curl -X POST http://localhost:3001/api/users \
   -H "Content-Type: application/json" \
-  -d '{"name":"Jane Doe","email":"jane@example.com","phone":"+1234567890"}'
+  -d '{"name":"Jane Doe","email":"john.doe@example.com","phone":"+1234567890"}'
 ```
 
-**Response (400 Bad Request):**
+**Response (409 Conflict):**
 
 ```json
 {
   "success": false,
-  "error": "User with this email already exists",
-  "code": "EMAIL_EXISTS",
-  "details": null
+  "error": "User already exists with this email",
+  "code": "DUPLICATE_USER",
+  "details": {
+    "field": "email",
+    "value": "john.doe@example.com"
+  }
+}
+```
+
+### Duplicate Email (Author Registration)
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/authors \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Isaac Asimov","email":"isaac.asimov@authors.com","biography":"Science fiction author"}'
+```
+
+**Response (409 Conflict):**
+
+```json
+{
+  "success": false,
+  "error": "Author already exists with this email",
+  "code": "DUPLICATE_AUTHOR",
+  "details": {
+    "field": "email",
+    "value": "isaac.asimov@authors.com"
+  }
 }
 ```
 
@@ -188,21 +275,24 @@ curl -X POST http://localhost:3001/api/books \
   -H "Content-Type: application/json" \
   -d '{
     "title":"Another Book",
-    "authorId":"a1234567-89ab-cdef-0123-456789abcdef",
-    "isbn":"978-0-7432-7356-5",
+    "author":"6757d9df2043b4c2e5dc6c89",
+    "isbn":"978-0553293395",
     "genre":"Fiction",
-    "publicationDate":"2023-01-01"
+    "publishedYear":2023
   }'
 ```
 
-**Response (400 Bad Request):**
+**Response (409 Conflict):**
 
 ```json
 {
   "success": false,
-  "error": "Book with this ISBN already exists",
-  "code": "ISBN_EXISTS",
-  "details": null
+  "error": "Book already exists with this ISBN",
+  "code": "DUPLICATE_BOOK",
+  "details": {
+    "field": "isbn",
+    "value": "978-0553293395"
+  }
 }
 ```
 
@@ -213,7 +303,7 @@ curl -X POST http://localhost:3001/api/books \
 ```bash
 curl -X POST http://localhost:3001/api/borrow \
   -H "Content-Type: application/json" \
-  -d '{"userId":"u1234567-89ab-cdef-0123-456789abcdef","bookId":"b1234567-89ab-cdef-0123-456789abcdef"}'
+  -d '{"userId":"6757d8622043b4c2e5dc6c7f","bookId":"6757da422043b4c2e5dc6c8f"}'
 ```
 
 **Response (400 Bad Request):**
@@ -223,7 +313,10 @@ curl -X POST http://localhost:3001/api/borrow \
   "success": false,
   "error": "Book is not available for borrowing",
   "code": "BOOK_NOT_AVAILABLE",
-  "details": null
+  "details": {
+    "bookId": "6757da422043b4c2e5dc6c8f",
+    "availableCopies": 0
+  }
 }
 ```
 
@@ -234,17 +327,20 @@ curl -X POST http://localhost:3001/api/borrow \
 ```bash
 curl -X POST http://localhost:3001/api/borrow \
   -H "Content-Type: application/json" \
-  -d '{"userId":"u1234567-89ab-cdef-0123-456789abcdef","bookId":"b1234567-89ab-cdef-0123-456789abcdef"}'
+  -d '{"userId":"6757d8622043b4c2e5dc6c7f","bookId":"6757da422043b4c2e5dc6c8f"}'
 ```
 
-**Response (400 Bad Request):**
+**Response (409 Conflict):**
 
 ```json
 {
   "success": false,
   "error": "User has already borrowed this book",
   "code": "ALREADY_BORROWED",
-  "details": null
+  "details": {
+    "userId": "6757d8622043b4c2e5dc6c7f",
+    "bookId": "6757da422043b4c2e5dc6c8f"
+  }
 }
 ```
 
@@ -255,7 +351,7 @@ curl -X POST http://localhost:3001/api/borrow \
 ```bash
 curl -X POST http://localhost:3001/api/return \
   -H "Content-Type: application/json" \
-  -d '{"borrowId":"br123456-89ab-cdef-0123-456789abcdef"}'
+  -d '{"borrowId":"6757dbb62043b4c2e5dc6c97"}'
 ```
 
 **Response (400 Bad Request):**
@@ -265,7 +361,38 @@ curl -X POST http://localhost:3001/api/return \
   "success": false,
   "error": "Book has already been returned",
   "code": "ALREADY_RETURNED",
-  "details": null
+  "details": {
+    "borrowId": "6757dbb62043b4c2e5dc6c97",
+    "returnDate": "2024-12-10T10:44:46.883Z"
+  }
+}
+```
+
+### Invalid Author Reference
+
+**Request:**
+
+```bash
+curl -X POST http://localhost:3001/api/books \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title":"Test Book",
+    "author":"6757d9df2043b4c2e5dc6c00",
+    "isbn":"978-1234567890",
+    "genre":"Fiction"
+  }'
+```
+
+**Response (400 Bad Request):**
+
+```json
+{
+  "success": false,
+  "error": "Author not found",
+  "code": "AUTHOR_NOT_FOUND",
+  "details": {
+    "authorId": "6757d9df2043b4c2e5dc6c00"
+  }
 }
 ```
 
@@ -276,7 +403,7 @@ curl -X POST http://localhost:3001/api/return \
 **Request:**
 
 ```bash
-curl -X GET http://localhost:3001/api/books/search
+curl -X GET "http://localhost:3001/api/books/search"
 ```
 
 **Response (400 Bad Request):**
@@ -285,7 +412,8 @@ curl -X GET http://localhost:3001/api/books/search
 {
   "success": false,
   "error": "Search query is required",
-  "code": "MISSING_QUERY"
+  "code": "MISSING_QUERY",
+  "details": null
 }
 ```
 
@@ -306,14 +434,48 @@ curl -X GET "http://localhost:3001/api/books?page=-1&limit=0"
   "code": "VALIDATION_ERROR",
   "details": [
     {
-      "message": "Page must be a positive integer",
-      "value": "-1"
+      "type": "field",
+      "value": "-1",
+      "msg": "Page must be a positive integer",
+      "path": "page",
+      "location": "query"
     },
     {
-      "message": "Limit must be between 1 and 100",
-      "value": "0"
+      "type": "field",
+      "value": "0",
+      "msg": "Limit must be between 1 and 100",
+      "path": "limit",
+      "location": "query"
     }
   ]
+}
+```
+
+### Invalid Sort Parameter
+
+**Request:**
+
+```bash
+curl -X GET "http://localhost:3001/api/books?sort=invalid_field"
+```
+
+**Response (400 Bad Request):**
+
+```json
+{
+  "success": false,
+  "error": "Invalid sort field",
+  "code": "INVALID_SORT",
+  "details": {
+    "field": "invalid_field",
+    "allowedFields": [
+      "title",
+      "genre",
+      "publishedYear",
+      "createdAt",
+      "updatedAt"
+    ]
+  }
 }
 ```
 
@@ -337,7 +499,48 @@ curl -X GET http://localhost:3001/api/invalid-endpoint
   "details": {
     "method": "GET",
     "url": "/api/invalid-endpoint",
-    "timestamp": "2025-06-26T02:45:00.000Z"
+    "timestamp": "2024-12-10T10:45:00.000Z"
+  }
+}
+```
+
+### Invalid HTTP Method
+
+**Request:**
+
+```bash
+curl -X PATCH http://localhost:3001/api/books
+```
+
+**Response (405 Method Not Allowed):**
+
+```json
+{
+  "success": false,
+  "error": "Method PATCH not allowed for /api/books",
+  "code": "METHOD_NOT_ALLOWED",
+  "details": {
+    "method": "PATCH",
+    "url": "/api/books",
+    "allowedMethods": ["GET", "POST"]
+  }
+}
+```
+
+## Database Connection Errors
+
+### MongoDB Connection Failed
+
+**Response (503 Service Unavailable):**
+
+```json
+{
+  "success": false,
+  "error": "Database connection failed",
+  "code": "DATABASE_CONNECTION_ERROR",
+  "details": {
+    "timestamp": "2024-12-10T10:45:00.000Z",
+    "retryAfter": 30
   }
 }
 ```
@@ -352,8 +555,42 @@ curl -X GET http://localhost:3001/api/invalid-endpoint
   "error": "Internal Server Error",
   "code": "INTERNAL_ERROR",
   "details": {
-    "timestamp": "2025-06-26T02:45:00.000Z",
+    "timestamp": "2024-12-10T10:45:00.000Z",
     "requestId": "req-12345"
+  }
+}
+```
+
+### Validation Schema Error
+
+```json
+{
+  "success": false,
+  "error": "Schema validation failed",
+  "code": "SCHEMA_VALIDATION_ERROR",
+  "details": {
+    "field": "publishedYear",
+    "message": "Published year must be a valid year between 1000 and current year",
+    "value": 2025
+  }
+}
+```
+
+## Rate Limiting (Future Enhancement)
+
+### Too Many Requests
+
+**Response (429 Too Many Requests):**
+
+```json
+{
+  "success": false,
+  "error": "Too many requests",
+  "code": "RATE_LIMIT_EXCEEDED",
+  "details": {
+    "limit": 100,
+    "window": "15m",
+    "retryAfter": 900
   }
 }
 ```
@@ -366,8 +603,30 @@ You can test these error scenarios using the provided Postman collection or by r
 
 - **200 OK**: Successful operations
 - **201 Created**: Resource successfully created
+- **204 No Content**: Successful deletion
 - **400 Bad Request**: Validation errors, business logic violations
 - **404 Not Found**: Resource not found, invalid routes
+- **405 Method Not Allowed**: Invalid HTTP method for endpoint
+- **409 Conflict**: Duplicate resources, constraint violations
+- **429 Too Many Requests**: Rate limiting (future enhancement)
 - **500 Internal Server Error**: Server-side errors
+- **503 Service Unavailable**: Database connection issues
 
-All error responses include helpful error codes and messages to assist with debugging and client-side error handling.
+### Error Response Consistency
+
+All error responses include:
+
+- **success**: Always `false` for errors
+- **error**: Human-readable error message
+- **code**: Machine-readable error code for programmatic handling
+- **details**: Additional context about the error (optional)
+
+### Best Practices for Client Applications
+
+1. **Check HTTP Status Code**: Use status codes for general error categorization
+2. **Parse Error Code**: Use the `code` field for specific error handling
+3. **Display Error Message**: Show the `error` field to users
+4. **Handle Validation Details**: Process the `details` array for field-specific errors
+5. **Implement Retry Logic**: For 5xx errors and rate limiting scenarios
+
+All error formats are consistent across the API, making it easy to implement robust error handling in client applications.
