@@ -1,120 +1,128 @@
 import BorrowRecord from '../models/BorrowRecord.js';
-import BookService from './bookService.js';
-import UserService from './userService.js';
+import Book from '../models/Book.js';
+import User from '../models/User.js';
+import mongoose from 'mongoose';
 
 class BorrowService {
-  constructor() {
-    this.borrowRecords = new Map();
-  }
-
   async findAll(filters = {}) {
-    let records = Array.from(this.borrowRecords.values());
+    const query = {};
 
     // Apply filters
-    if (filters.userId) {
-      records = records.filter((record) => record.userId === filters.userId);
+    if (filters.userId && mongoose.Types.ObjectId.isValid(filters.userId)) {
+      query.userId = filters.userId;
     }
 
-    if (filters.bookId) {
-      records = records.filter((record) => record.bookId === filters.bookId);
+    if (filters.bookId && mongoose.Types.ObjectId.isValid(filters.bookId)) {
+      query.bookId = filters.bookId;
     }
 
     if (filters.status) {
-      records = records.filter((record) => record.status === filters.status);
+      query.status = filters.status;
     }
 
-    // Check for overdue records and update status
-    const now = new Date();
-    records.forEach((record) => {
-      if (record.status === 'active' && new Date(record.dueDate) < now) {
-        record.markOverdue();
-        this.borrowRecords.set(record.id, record);
-      }
-    });
+    // Update overdue records first
+    await BorrowRecord.updateOverdueRecords();
 
-    // Sort
+    // Sorting
+    let sort = { borrowDate: -1 }; // Default: newest first
     if (filters.sort) {
-      const sortField = filters.sort.startsWith('-')
-        ? filters.sort.slice(1)
-        : filters.sort;
-      const sortOrder = filters.sort.startsWith('-') ? -1 : 1;
-
-      records.sort((a, b) => {
-        if (a[sortField] < b[sortField]) return -1 * sortOrder;
-        if (a[sortField] > b[sortField]) return 1 * sortOrder;
-        return 0;
-      });
-    } else {
-      // Default sort by borrow date (newest first)
-      records.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
+      const field = filters.sort.replace('-', '');
+      const order = filters.sort.startsWith('-') ? -1 : 1;
+      sort = { [field]: order };
     }
 
     // Pagination
-    const page = parseInt(filters.page) || 1;
-    const limit = parseInt(filters.limit) || 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+    const page = parseInt(filters.page) > 0 ? parseInt(filters.page) : 1;
+    const limit = parseInt(filters.limit) > 0 ? parseInt(filters.limit) : 10;
+    const skip = (page - 1) * limit;
 
-    const paginatedRecords = records.slice(startIndex, endIndex);
+    const [borrowRecords, totalItems] = await Promise.all([
+      BorrowRecord.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .populate('user', 'name email libraryCard')
+        .populate('book', 'title isbn author')
+        .lean(),
+      BorrowRecord.countDocuments(query),
+    ]);
 
     return {
-      borrowRecords: paginatedRecords,
+      borrowRecords,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(records.length / limit),
-        totalItems: records.length,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
         itemsPerPage: limit,
-        hasNext: endIndex < records.length,
+        hasNext: skip + borrowRecords.length < totalItems,
         hasPrev: page > 1,
       },
     };
   }
 
   async findById(id) {
-    return this.borrowRecords.get(id) || null;
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+    return BorrowRecord.findById(id)
+      .populate('user', 'name email libraryCard')
+      .populate('book', 'title isbn author')
+      .lean();
   }
 
   async findActiveByUserAndBook(userId, bookId) {
-    for (const record of this.borrowRecords.values()) {
-      if (
-        record.userId === userId &&
-        record.bookId === bookId &&
-        record.status === 'active'
-      ) {
-        return record;
-      }
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(bookId)
+    ) {
+      return null;
     }
-    return null;
+
+    return BorrowRecord.findOne({
+      userId,
+      bookId,
+      status: 'active',
+    }).lean();
   }
 
   async borrowBook(borrowData) {
-    // Validate user exists
-    const user = await UserService.findById(borrowData.userId);
+    // Validate user exists and can borrow
+    const user = await User.findById(borrowData.userId);
     if (!user) {
-      throw {
-        statusCode: 404,
-        message: 'User not found',
-        code: 'USER_NOT_FOUND',
-      };
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      error.code = 'USER_NOT_FOUND';
+      throw error;
     }
 
-    // Validate book exists
-    const book = await BookService.findById(borrowData.bookId);
+    if (user.status !== 'active') {
+      const error = new Error('User account is not active');
+      error.statusCode = 400;
+      error.code = 'USER_NOT_ACTIVE';
+      throw error;
+    }
+
+    // Check if user can borrow more books
+    const canBorrow = await user.canBorrow();
+    if (!canBorrow) {
+      const error = new Error('User has reached maximum borrow limit');
+      error.statusCode = 400;
+      error.code = 'BORROW_LIMIT_REACHED';
+      throw error;
+    }
+
+    // Validate book exists and is available
+    const book = await Book.findById(borrowData.bookId);
     if (!book) {
-      throw {
-        statusCode: 404,
-        message: 'Book not found',
-        code: 'BOOK_NOT_FOUND',
-      };
+      const error = new Error('Book not found');
+      error.statusCode = 404;
+      error.code = 'BOOK_NOT_FOUND';
+      throw error;
     }
 
-    // Check if book is available
     if (!book.available) {
-      throw {
-        statusCode: 400,
-        message: 'Book is not available for borrowing',
-        code: 'BOOK_NOT_AVAILABLE',
-      };
+      const error = new Error('Book is not available for borrowing');
+      error.statusCode = 400;
+      error.code = 'BOOK_NOT_AVAILABLE';
+      throw error;
     }
 
     // Check if user already has this book borrowed
@@ -123,138 +131,265 @@ class BorrowService {
       borrowData.bookId
     );
     if (existingBorrow) {
-      throw {
-        statusCode: 400,
-        message: 'User has already borrowed this book',
-        code: 'ALREADY_BORROWED',
-      };
+      const error = new Error('User has already borrowed this book');
+      error.statusCode = 400;
+      error.code = 'ALREADY_BORROWED';
+      throw error;
     }
 
-    // Create borrow record
-    const borrowRecord = new BorrowRecord(
-      borrowData.userId,
-      borrowData.bookId,
-      borrowData.dueDate
-    );
+    // Create borrow record using transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Update book availability
-    await BookService.updateAvailability(borrowData.bookId, false);
+    try {
+      // Set default due date if not provided (14 days from now)
+      const dueDate = borrowData.dueDate 
+        ? new Date(borrowData.dueDate)
+        : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
 
-    this.borrowRecords.set(borrowRecord.id, borrowRecord);
-    return borrowRecord;
+      // Create borrow record
+      const borrowRecord = await BorrowRecord.create(
+        [
+          {
+            userId: borrowData.userId,
+            bookId: borrowData.bookId,
+            dueDate: dueDate,
+          },
+        ],
+        { session }
+      );
+
+      // Update book availability
+      await Book.findByIdAndUpdate(
+        borrowData.bookId,
+        { available: false },
+        { session }
+      );
+
+      await session.commitTransaction();
+
+      // Return populated record
+      return BorrowRecord.findById(borrowRecord[0]._id)
+        .populate('user', 'name email libraryCard')
+        .populate('book', 'title isbn author')
+        .lean();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
   }
 
   async returnBook(borrowId) {
-    const borrowRecord = this.borrowRecords.get(borrowId);
+    if (!mongoose.Types.ObjectId.isValid(borrowId)) {
+      const error = new Error('Invalid borrow record ID');
+      error.statusCode = 400;
+      error.code = 'INVALID_ID';
+      throw error;
+    }
+
+    const borrowRecord = await BorrowRecord.findById(borrowId);
     if (!borrowRecord) {
-      throw {
-        statusCode: 404,
-        message: 'Borrow record not found',
-        code: 'BORROW_NOT_FOUND',
-      };
+      const error = new Error('Borrow record not found');
+      error.statusCode = 404;
+      error.code = 'BORROW_NOT_FOUND';
+      throw error;
     }
 
     if (borrowRecord.status === 'returned') {
-      throw {
-        statusCode: 400,
-        message: 'Book has already been returned',
-        code: 'ALREADY_RETURNED',
-      };
+      const error = new Error('Book has already been returned');
+      error.statusCode = 400;
+      error.code = 'ALREADY_RETURNED';
+      throw error;
     }
 
-    // Mark as returned
-    borrowRecord.returnBook();
+    // Use transaction to ensure consistency
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Update book availability
-    await BookService.updateAvailability(borrowRecord.bookId, true);
+    try {
+      // Mark as returned
+      borrowRecord.status = 'returned';
+      borrowRecord.returnDate = new Date();
+      await borrowRecord.save({ session });
 
-    this.borrowRecords.set(borrowId, borrowRecord);
-    return borrowRecord;
+      // Update book availability
+      await Book.findByIdAndUpdate(
+        borrowRecord.bookId,
+        { available: true },
+        { session }
+      );
+
+      await session.commitTransaction();
+
+      // Return populated record
+      return BorrowRecord.findById(borrowRecord._id)
+        .populate('user', 'name email libraryCard')
+        .populate('book', 'title isbn author')
+        .lean();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      await session.endSession();
+    }
   }
 
   async extendDueDate(borrowId, newDueDate) {
-    const borrowRecord = this.borrowRecords.get(borrowId);
+    if (!mongoose.Types.ObjectId.isValid(borrowId)) {
+      const error = new Error('Invalid borrow record ID');
+      error.statusCode = 400;
+      error.code = 'INVALID_ID';
+      throw error;
+    }
+
+    const borrowRecord = await BorrowRecord.findById(borrowId);
     if (!borrowRecord) {
-      throw {
-        statusCode: 404,
-        message: 'Borrow record not found',
-        code: 'BORROW_NOT_FOUND',
-      };
+      const error = new Error('Borrow record not found');
+      error.statusCode = 404;
+      error.code = 'BORROW_NOT_FOUND';
+      throw error;
     }
 
     if (borrowRecord.status === 'returned') {
-      throw {
-        statusCode: 400,
-        message: 'Cannot extend due date for returned book',
-        code: 'BOOK_RETURNED',
-      };
+      const error = new Error('Cannot extend due date for returned book');
+      error.statusCode = 400;
+      error.code = 'BOOK_RETURNED';
+      throw error;
     }
 
     if (new Date(newDueDate) <= new Date()) {
-      throw {
-        statusCode: 400,
-        message: 'New due date must be in the future',
-        code: 'INVALID_DUE_DATE',
-      };
+      const error = new Error('New due date must be in the future');
+      error.statusCode = 400;
+      error.code = 'INVALID_DUE_DATE';
+      throw error;
     }
 
-    borrowRecord.update({ dueDate: newDueDate });
-    if (borrowRecord.status === 'overdue' && !borrowRecord.isOverdue()) {
-      borrowRecord.update({ status: 'active' });
+    borrowRecord.dueDate = newDueDate;
+
+    // Reset status to active if it was overdue and new date is valid
+    if (
+      borrowRecord.status === 'overdue' &&
+      new Date(newDueDate) > new Date()
+    ) {
+      borrowRecord.status = 'active';
     }
 
-    this.borrowRecords.set(borrowId, borrowRecord);
-    return borrowRecord;
+    await borrowRecord.save();
+
+    return BorrowRecord.findById(borrowRecord._id)
+      .populate('user', 'name email libraryCard')
+      .populate('book', 'title isbn author')
+      .lean();
+  }
+
+  async renewBorrow(borrowId) {
+    const borrowRecord = await BorrowRecord.findById(borrowId);
+    if (!borrowRecord) {
+      const error = new Error('Borrow record not found');
+      error.statusCode = 404;
+      error.code = 'BORROW_NOT_FOUND';
+      throw error;
+    }
+
+    try {
+      await borrowRecord.renew();
+      return BorrowRecord.findById(borrowRecord._id)
+        .populate('user', 'name email libraryCard')
+        .populate('book', 'title isbn author')
+        .lean();
+    } catch (error) {
+      const err = new Error(error.message);
+      err.statusCode = 400;
+      err.code = 'RENEWAL_ERROR';
+      throw err;
+    }
   }
 
   async getUserBorrowHistory(userId) {
-    const userRecords = Array.from(this.borrowRecords.values())
-      .filter((record) => record.userId === userId)
-      .sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return [];
+    }
 
-    return userRecords;
+    return BorrowRecord.find({ userId })
+      .sort({ borrowDate: -1 })
+      .populate('book', 'title isbn author')
+      .lean();
   }
 
   async getBookBorrowHistory(bookId) {
-    const bookRecords = Array.from(this.borrowRecords.values())
-      .filter((record) => record.bookId === bookId)
-      .sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
+    if (!mongoose.Types.ObjectId.isValid(bookId)) {
+      return [];
+    }
 
-    return bookRecords;
+    return BorrowRecord.find({ bookId })
+      .sort({ borrowDate: -1 })
+      .populate('user', 'name email libraryCard')
+      .lean();
   }
 
   async getOverdueBooks() {
-    const now = new Date();
-    const overdueRecords = [];
+    await BorrowRecord.updateOverdueRecords();
 
-    for (const record of this.borrowRecords.values()) {
-      if (record.status === 'active' && new Date(record.dueDate) < now) {
-        record.markOverdue();
-        this.borrowRecords.set(record.id, record);
-        overdueRecords.push(record);
-      }
-    }
+    return BorrowRecord.find({ status: 'overdue' })
+      .populate('user', 'name email libraryCard phone')
+      .populate('book', 'title isbn author')
+      .sort({ dueDate: 1 })
+      .lean();
+  }
 
-    return overdueRecords;
+  async getDueSoon(days = 3) {
+    return BorrowRecord.findDueSoon()
+      .populate('user', 'name email libraryCard phone')
+      .populate('book', 'title isbn author')
+      .sort({ dueDate: 1 })
+      .lean();
   }
 
   async getStats() {
-    const records = Array.from(this.borrowRecords.values());
-    const activeRecords = records.filter(
-      (record) => record.status === 'active'
-    );
-    const returnedRecords = records.filter(
-      (record) => record.status === 'returned'
-    );
-    const overdueRecords = records.filter(
-      (record) => record.status === 'overdue'
-    );
+    const [
+      totalBorrows,
+      activeBorrows,
+      returnedBorrows,
+      overdueBorrows,
+      lostBorrows,
+    ] = await Promise.all([
+      BorrowRecord.countDocuments(),
+      BorrowRecord.countDocuments({ status: 'active' }),
+      BorrowRecord.countDocuments({ status: 'returned' }),
+      BorrowRecord.countDocuments({ status: 'overdue' }),
+      BorrowRecord.countDocuments({ status: 'lost' }),
+    ]);
+
+    // Monthly borrow statistics
+    const monthlyStatsArr = await BorrowRecord.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: '$borrowDate' },
+            month: { $month: '$borrowDate' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } },
+      { $limit: 12 },
+    ]);
+
+    const monthlyStats = {};
+    monthlyStatsArr.forEach((m) => {
+      const key = `${m._id.year}-${m._id.month.toString().padStart(2, '0')}`;
+      monthlyStats[key] = m.count;
+    });
 
     return {
-      totalBorrows: records.length,
-      activeBorrows: activeRecords.length,
-      returnedBorrows: returnedRecords.length,
-      overdueBorrows: overdueRecords.length,
+      totalBorrows,
+      activeBorrows,
+      returnedBorrows,
+      overdueBorrows,
+      lostBorrows,
+      monthlyBorrows: monthlyStats,
     };
   }
 }

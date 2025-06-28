@@ -1,191 +1,142 @@
 import Book from '../models/Book.js';
 import Author from '../models/Author.js';
+import mongoose from 'mongoose';
 
 class BookService {
-  constructor() {
-    this.books = new Map();
-    this.initializeData();
-  }
-
-  initializeData() {
-    // Sample data for demonstration
-    const sampleBooks = [
-      {
-        title: 'The Great Gatsby',
-        authorId: 'a1234567-89ab-cdef-0123-456789abcdef',
-        isbn: '978-0-7432-7356-5',
-        genre: 'Fiction',
-        publicationDate: '1925-04-10',
-      },
-      {
-        title: 'To Kill a Mockingbird',
-        authorId: 'a2234567-89ab-cdef-0123-456789abcdef',
-        isbn: '978-0-06-112008-4',
-        genre: 'Fiction',
-        publicationDate: '1960-07-11',
-      },
-      {
-        title: '1984',
-        authorId: 'a3234567-89ab-cdef-0123-456789abcdef',
-        isbn: '978-0-452-28423-4',
-        genre: 'Dystopian Fiction',
-        publicationDate: '1949-06-08',
-      },
-    ];
-
-    sampleBooks.forEach((bookData) => {
-      const book = new Book(
-        bookData.title,
-        bookData.authorId,
-        bookData.isbn,
-        bookData.genre,
-        bookData.publicationDate
-      );
-      this.books.set(book.id, book);
-    });
-  }
-
   async findAll(filters = {}) {
-    let books = Array.from(this.books.values());
-
-    // Apply filters
+    const query = {};
     if (filters.q) {
-      const query = filters.q.toLowerCase();
-      books = books.filter(
-        (book) =>
-          book.title.toLowerCase().includes(query) ||
-          book.genre.toLowerCase().includes(query) ||
-          book.isbn.toLowerCase().includes(query)
-      );
+      query.$or = [
+        { title: { $regex: filters.q, $options: 'i' } },
+        { genre: { $regex: filters.q, $options: 'i' } },
+        { isbn: { $regex: filters.q, $options: 'i' } },
+      ];
     }
-
     if (filters.genre) {
-      books = books.filter(
-        (book) => book.genre.toLowerCase() === filters.genre.toLowerCase()
-      );
+      query.genre = { $regex: filters.genre, $options: 'i' };
     }
-
     if (filters.available !== undefined) {
-      books = books.filter((book) => book.available === filters.available);
+      query.available = filters.available;
     }
-
     if (filters.authorId) {
-      books = books.filter((book) => book.authorId === filters.authorId);
+      if (mongoose.Types.ObjectId.isValid(filters.authorId)) {
+        query.authorId = filters.authorId;
+      }
     }
 
-    // Sort
+    // Sorting
+    let sort = { title: 1 };
     if (filters.sort) {
-      const sortField = filters.sort.startsWith('-')
-        ? filters.sort.slice(1)
-        : filters.sort;
-      const sortOrder = filters.sort.startsWith('-') ? -1 : 1;
-
-      books.sort((a, b) => {
-        if (a[sortField] < b[sortField]) return -1 * sortOrder;
-        if (a[sortField] > b[sortField]) return 1 * sortOrder;
-        return 0;
-      });
-    } else {
-      // Default sort by title
-      books.sort((a, b) => a.title.localeCompare(b.title));
+      const field = filters.sort.replace('-', '');
+      const order = filters.sort.startsWith('-') ? -1 : 1;
+      sort = { [field]: order };
     }
 
     // Pagination
-    const page = parseInt(filters.page) || 1;
-    const limit = parseInt(filters.limit) || 10;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
+    const page = parseInt(filters.page) > 0 ? parseInt(filters.page) : 1;
+    const limit = parseInt(filters.limit) > 0 ? parseInt(filters.limit) : 10;
+    const skip = (page - 1) * limit;
 
-    const paginatedBooks = books.slice(startIndex, endIndex);
+    const [books, totalItems] = await Promise.all([
+      Book.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .populate('author')
+        .lean(),
+      Book.countDocuments(query),
+    ]);
 
     return {
-      books: paginatedBooks,
+      books,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(books.length / limit),
-        totalItems: books.length,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
         itemsPerPage: limit,
-        hasNext: endIndex < books.length,
+        hasNext: skip + books.length < totalItems,
         hasPrev: page > 1,
       },
     };
   }
 
   async findById(id) {
-    return this.books.get(id) || null;
+    if (!mongoose.Types.ObjectId.isValid(id)) return null;
+    return Book.findById(id).populate('author').lean();
   }
 
   async findByIsbn(isbn) {
-    for (const book of this.books.values()) {
-      if (book.isbn === isbn) {
-        return book;
-      }
-    }
-    return null;
+    return Book.findOne({ isbn: isbn.replace(/[-\s]/g, '') }).lean();
   }
 
   async create(bookData) {
     // Check if ISBN already exists
     const existingBook = await this.findByIsbn(bookData.isbn);
     if (existingBook) {
-      throw {
-        statusCode: 409,
-        message: 'Book with this ISBN already exists',
-        code: 'ISBN_EXISTS',
-      };
+      const error = new Error('Book with this ISBN already exists');
+      error.statusCode = 409;
+      error.code = 'ISBN_EXISTS';
+      throw error;
     }
-
-    const book = new Book(
-      bookData.title,
-      bookData.authorId,
-      bookData.isbn,
-      bookData.genre,
-      bookData.publicationDate
-    );
-
-    this.books.set(book.id, book);
-    return book;
+    // Validate author exists
+    if (!(await Author.findById(bookData.authorId))) {
+      const error = new Error('Author not found');
+      error.statusCode = 404;
+      error.code = 'AUTHOR_NOT_FOUND';
+      throw error;
+    }
+    const book = await Book.create(bookData);
+    return book.toObject();
   }
 
   async update(id, updateData) {
-    const book = this.books.get(id);
-    if (!book) {
-      throw {
-        statusCode: 404,
-        message: 'Book not found',
-        code: 'BOOK_NOT_FOUND',
-      };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      const error = new Error('Invalid book ID');
+      error.statusCode = 400;
+      error.code = 'INVALID_ID';
+      throw error;
     }
-
     // Check if ISBN is being updated and already exists
-    if (updateData.isbn && updateData.isbn !== book.isbn) {
-      const existingBook = await this.findByIsbn(updateData.isbn);
+    if (updateData.isbn) {
+      const existingBook = await Book.findOne({
+        isbn: updateData.isbn.replace(/[-\s]/g, ''),
+        _id: { $ne: id },
+      });
       if (existingBook) {
-        throw {
-          statusCode: 409,
-          message: 'Book with this ISBN already exists',
-          code: 'ISBN_EXISTS',
-        };
+        const error = new Error('Book with this ISBN already exists');
+        error.statusCode = 409;
+        error.code = 'ISBN_EXISTS';
+        throw error;
       }
     }
-
-    book.update(updateData);
-    this.books.set(id, book);
-    return book;
+    const book = await Book.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate('author');
+    if (!book) {
+      const error = new Error('Book not found');
+      error.statusCode = 404;
+      error.code = 'BOOK_NOT_FOUND';
+      throw error;
+    }
+    return book.toObject();
   }
 
   async delete(id) {
-    const book = this.books.get(id);
-    if (!book) {
-      throw {
-        statusCode: 404,
-        message: 'Book not found',
-        code: 'BOOK_NOT_FOUND',
-      };
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      const error = new Error('Invalid book ID');
+      error.statusCode = 400;
+      error.code = 'INVALID_ID';
+      throw error;
     }
-
-    this.books.delete(id);
-    return book;
+    const book = await Book.findByIdAndDelete(id);
+    if (!book) {
+      const error = new Error('Book not found');
+      error.statusCode = 404;
+      error.code = 'BOOK_NOT_FOUND';
+      throw error;
+    }
+    return book.toObject();
   }
 
   async updateAvailability(id, available) {
@@ -193,19 +144,20 @@ class BookService {
   }
 
   async getStats() {
-    const books = Array.from(this.books.values());
-    const availableBooks = books.filter((book) => book.available);
-    const borrowedBooks = books.filter((book) => !book.available);
-
-    const genreStats = books.reduce((acc, book) => {
-      acc[book.genre] = (acc[book.genre] || 0) + 1;
-      return acc;
-    }, {});
-
+    const totalBooks = await Book.countDocuments();
+    const availableBooks = await Book.countDocuments({ available: true });
+    const borrowedBooks = await Book.countDocuments({ available: false });
+    const genreStatsArr = await Book.aggregate([
+      { $group: { _id: '$genre', count: { $sum: 1 } } },
+    ]);
+    const genreStats = {};
+    genreStatsArr.forEach((g) => {
+      genreStats[g._id] = g.count;
+    });
     return {
-      totalBooks: books.length,
-      availableBooks: availableBooks.length,
-      borrowedBooks: borrowedBooks.length,
+      totalBooks,
+      availableBooks,
+      borrowedBooks,
       genreDistribution: genreStats,
     };
   }
