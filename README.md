@@ -383,11 +383,13 @@ curl -X POST http://localhost:3001/api/borrow \
 **Request:**
 
 ```bash
-curl -X POST http://localhost:3001/api/return \
-  -H "Content-Type: application/json" \
+curl -X 'POST' \
+  'http://localhost:3001/api/return' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
   -d '{
-    "borrowId": "6757dbb62043b4c2e5dc6c97"
-  }'
+  "borrowId": "68ab88b73d89082f99345d0c"
+}'
 ```
 
 **Response:**
