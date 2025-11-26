@@ -599,6 +599,588 @@ npm run lint:fix    # Fix linting issues
 npm run format      # Format code
 ```
 
+### 🏥 Routine Health Check Commands
+
+Use these commands to perform comprehensive health checks and verify all endpoints are working correctly:
+
+#### **1. Start the Server**
+
+```bash
+# Start server in background
+nohup npm start > server.log 2>&1 &
+
+# Or start in development mode
+npm run dev
+```
+
+#### **2. Basic Health Check**
+
+```bash
+echo "🏥 Testing Health Endpoint..." && curl -s http://localhost:3001/health | head -200
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "message": "Book Library API is running",
+  "timestamp": "2025-11-26T15:37:13.727Z",
+  "version": "1.0.0"
+}
+```
+
+#### **3. Authors Endpoint Testing**
+
+```bash
+echo "👤 Testing Authors Endpoint..." && curl -s "http://localhost:3001/api/authors?limit=5" | npx json
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "685fd756ae5c4d390d769f94",
+      "name": "Agatha Christie",
+      "email": "agatha.christie@mystery.com",
+      "biography": "English writer known for her detective novels...",
+      "birthDate": "1890-09-15T00:00:00.000Z",
+      "nationality": "British",
+      "books": [
+        {
+          "_id": "685fd756ae5c4d390d769fb3",
+          "title": "Murder on the Orient Express",
+          "isbn": "9780007119318",
+          "genre": "Mystery"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 3,
+    "totalItems": 15,
+    "itemsPerPage": 5
+  }
+}
+```
+
+#### **4. Books Endpoint Testing**
+
+```bash
+echo "📚 Testing Books Endpoint..." && curl -s "http://localhost:3001/api/books?limit=5" | npx json
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "685fd756ae5c4d390d769fb0",
+      "title": "A Clash of Kings",
+      "authorId": "685fd756ae5c4d390d769f92",
+      "isbn": "9780553108033",
+      "genre": "Fantasy",
+      "publicationDate": "1999-02-02T00:00:00.000Z",
+      "available": true,
+      "description": "The second book in A Song of Ice and Fire series.",
+      "pages": 761,
+      "language": "English",
+      "publisher": "Bantam Spectra",
+      "author": {
+        "_id": "685fd756ae5c4d390d769f92",
+        "name": "George R.R. Martin",
+        "email": "grrm@winterfell.com",
+        "nationality": "American"
+      }
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 7,
+    "totalItems": 33,
+    "itemsPerPage": 5
+  }
+}
+```
+
+#### **5. Users Endpoint Testing**
+
+```bash
+echo "👥 Testing Users Endpoint..." && curl -s "http://localhost:3001/api/users?limit=3" | npx json
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "685fd756ae5c4d390d769fa6",
+      "name": "Adaora Okafor",
+      "email": "adaora.okafor@gmail.com",
+      "phone": "+234-803-123-4567",
+      "membershipDate": "2023-06-10T00:00:00.000Z",
+      "address": {
+        "street": "15 Victoria Island Road",
+        "city": "Lagos",
+        "state": "Lagos",
+        "zipCode": "101001",
+        "country": "Nigeria"
+      },
+      "preferences": {
+        "notifications": {
+          "email": true,
+          "sms": false,
+          "reminders": true
+        },
+        "favoriteGenres": [],
+        "language": "English"
+      },
+      "status": "active",
+      "__v": 0,
+      "createdAt": "2025-06-28T11:51:50.733Z",
+      "updatedAt": "2025-06-28T11:51:50.733Z",
+      "borrowRecords": []
+    },
+    {
+      "_id": "685fd756ae5c4d390d769fa1",
+      "name": "Alice Johnson",
+      "email": "alice.johnson@email.com",
+      "phone": "+1-555-0101",
+      "membershipDate": "2023-01-15T00:00:00.000Z",
+      "address": {
+        "street": "123 Library St",
+        "city": "Booktown",
+        "state": "Reading",
+        "zipCode": "12345",
+        "country": "USA"
+      },
+      "preferences": {
+        "notifications": {
+          "email": true,
+          "sms": false,
+          "reminders": true
+        },
+        "favoriteGenres": [],
+        "language": "English"
+      },
+      "status": "active",
+      "__v": 0,
+      "createdAt": "2025-06-28T11:51:50.731Z",
+      "updatedAt": "2025-06-28T11:51:50.731Z",
+      "borrowRecords": [
+        {
+          "_id": "685fd757ae5c4d390d769fce",
+          "userId": "685fd756ae5c4d390d769fa1",
+          "bookId": "685fd756ae5c4d390d769fb0",
+          "borrowDate": "2025-06-21T11:51:51.151Z",
+          "dueDate": "2025-07-05T11:51:51.151Z",
+          "status": "returned",
+          "renewalCount": 0,
+          "fineAmount": 2550,
+          "finePaid": false,
+          "__v": 0,
+          "createdAt": "2025-06-28T11:51:51.154Z",
+          "updatedAt": "2025-08-24T21:21:06.787Z",
+          "returnDate": "2025-08-24T21:21:06.785Z"
+        }
+      ]
+    },
+    {
+      "_id": "685fd756ae5c4d390d769fa8",
+      "name": "Amina Hassan",
+      "email": "amina.hassan@hotmail.com",
+      "phone": "+254-722-345-678",
+      "membershipDate": "2023-08-05T00:00:00.000Z",
+      "address": {
+        "street": "78 Uhuru Highway",
+        "city": "Nairobi",
+        "state": "Nairobi",
+        "zipCode": "00100",
+        "country": "Kenya"
+      },
+      "preferences": {
+        "notifications": {
+          "email": true,
+          "sms": false,
+          "reminders": true
+        },
+        "favoriteGenres": [],
+        "language": "English"
+      },
+      "status": "active",
+      "__v": 0,
+      "createdAt": "2025-06-28T11:51:50.733Z",
+      "updatedAt": "2025-06-28T11:51:50.733Z",
+      "borrowRecords": [
+        {
+          "_id": "685fdfae08aea8e70fd259f7",
+          "userId": "685fd756ae5c4d390d769fa8",
+          "bookId": "685fd756ae5c4d390d769fb6",
+          "dueDate": "2025-07-12T12:27:26.954Z",
+          "status": "returned",
+          "renewalCount": 0,
+          "fineAmount": 2200,
+          "finePaid": false,
+          "borrowDate": "2025-06-28T12:27:26.971Z",
+          "createdAt": "2025-06-28T12:27:26.993Z",
+          "updatedAt": "2025-08-24T21:08:45.798Z",
+          "__v": 0,
+          "returnDate": "2025-08-24T21:08:45.788Z"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 4,
+    "totalItems": 12,
+    "itemsPerPage": 3,
+    "hasNext": true,
+    "hasPrev": false
+  },
+  "message": "Users retrieved successfully"
+}
+```
+
+#### **6. Borrow Records Testing**
+
+```bash
+echo "📋 Testing Borrow Records Endpoint..." && curl -s "http://localhost:3001/api/borrow-records?limit=2" | npx json
+```
+
+**Expected Response:**
+
+```json
+Testing Borrow Records Endpoint...
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "68ab88b73d89082f99345d0c",
+      "userId": "685fd756ae5c4d390d769fa4",
+      "bookId": "685fd756ae5c4d390d769fb5",
+      "dueDate": "2025-09-07T21:48:39.887Z",
+      "status": "returned",
+      "renewalCount": 0,
+      "fineAmount": 1050,
+      "finePaid": false,
+      "borrowDate": "2025-08-24T21:48:39.887Z",
+      "createdAt": "2025-08-24T21:48:39.888Z",
+      "updatedAt": "2025-09-28T21:49:15.087Z",
+      "__v": 0,
+      "returnDate": "2025-09-28T21:49:15.085Z",
+      "book": {
+        "_id": "685fd756ae5c4d390d769fb5",
+        "title": "Foundation",
+        "isbn": "9780553293357"
+      },
+      "user": {
+        "_id": "685fd756ae5c4d390d769fa4",
+        "name": "David Wilson",
+        "email": "david.wilson@email.com"
+      }
+    },
+    {
+      "_id": "68ab88143d89082f99345d02",
+      "userId": "685fd756ae5c4d390d769fab",
+      "bookId": "685fd756ae5c4d390d769faf",
+      "dueDate": "2025-09-07T21:45:56.498Z",
+      "status": "returned",
+      "renewalCount": 0,
+      "fineAmount": 1050,
+      "finePaid": false,
+      "borrowDate": "2025-08-24T21:45:56.502Z",
+      "createdAt": "2025-08-24T21:45:56.511Z",
+      "updatedAt": "2025-09-28T21:51:53.322Z",
+      "__v": 0,
+      "returnDate": "2025-09-28T21:51:53.320Z",
+      "book": {
+        "_id": "685fd756ae5c4d390d769faf",
+        "title": "A Game of Thrones",
+        "isbn": "9780553103540"
+      },
+      "user": {
+        "_id": "685fd756ae5c4d390d769fab",
+        "name": "Fatoumata Keita",
+        "email": "fatoumata.keita@gmail.com"
+      }
+    },
+    {
+      "_id": "685fe19b08aea8e70fd25a01",
+      "userId": "685fd756ae5c4d390d769fa5",
+      "bookId": "685fd756ae5c4d390d769fbb",
+      "dueDate": "2025-07-12T12:35:39.625Z",
+      "status": "returned",
+      "renewalCount": 0,
+      "fineAmount": 2200,
+      "finePaid": false,
+      "borrowDate": "2025-06-28T12:35:39.626Z",
+      "createdAt": "2025-06-28T12:35:39.626Z",
+      "updatedAt": "2025-08-24T21:10:05.983Z",
+      "__v": 0,
+      "returnDate": "2025-08-24T21:10:05.982Z",
+      "book": {
+        "_id": "685fd756ae5c4d390d769fbb",
+        "title": "Death and the King's Horseman",
+        "isbn": "9780393312836"
+      },
+      "user": {
+        "_id": "685fd756ae5c4d390d769fa5",
+        "name": "Emma Brown",
+        "email": "emma.brown@email.com"
+      }
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 3,
+    "totalItems": 7,
+    "itemsPerPage": 3,
+    "hasNext": true,
+    "hasPrev": false
+  },
+  "message": "Borrow records retrieved successfully"
+}
+```
+
+#### **7. Search Functionality Testing**
+
+```bash
+echo "🔍 Testing Specific Author search by name..." && curl -s "http://localhost:3001/api/authors/search?q=Thiongo" | npx json
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "685fd756ae5c4d390d769f9a",
+      "name": "Ngugi wa Thiongo",
+      "email": "ngugi.thiongo@literature.ke",
+      "biography": "Kenyan author and academic who writes primarily in Gikuyu. Known for novels like Weep Not, Child and A Grain of Wheat.",
+      "birthDate": "1938-01-05T00:00:00.000Z",
+      "nationality": "Kenyan",
+      "awards": [],
+      "__v": 0,
+      "createdAt": "2025-06-28T11:51:50.493Z",
+      "updatedAt": "2025-06-28T11:51:50.493Z",
+      "books": [
+        {
+          "_id": "685fd756ae5c4d390d769fc2",
+          "title": "A Grain of Wheat",
+          "authorId": "685fd756ae5c4d390d769f9a",
+          "isbn": "9780435905217",
+          "genre": "Literary Fiction",
+          "publicationDate": "1967-01-01T00:00:00.000Z",
+          "available": true,
+          "description": "A novel set during the final days of British colonial rule in Kenya.",
+          "pages": 264,
+          "language": "English",
+          "publisher": "Heinemann",
+          "__v": 0,
+          "createdAt": "2025-06-28T11:51:50.967Z",
+          "updatedAt": "2025-06-28T11:51:50.967Z"
+        },
+        {
+          "_id": "685fd756ae5c4d390d769fc1",
+          "title": "Weep Not, Child",
+          "authorId": "685fd756ae5c4d390d769f9a",
+          "isbn": "9780435905200",
+          "genre": "Literary Fiction",
+          "publicationDate": "1964-01-01T00:00:00.000Z",
+          "available": true,
+          "description": "A novel about a young Kenyan boy's experiences during the Mau Mau uprising.",
+          "pages": 154,
+          "language": "English",
+          "publisher": "Heinemann",
+          "__v": 0,
+          "createdAt": "2025-06-28T11:51:50.967Z",
+          "updatedAt": "2025-06-28T11:51:50.967Z"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "totalPages": 1,
+    "totalItems": 1,
+    "itemsPerPage": 10,
+    "hasNext": false,
+    "hasPrev": false
+  },
+  "message": "Found 1 authors matching \"Thiongo\""
+}
+```
+
+#### **8. Error Handling Testing**
+
+```bash
+echo "⚠️ Testing Error Handling..." && curl -s "http://localhost:3001/api/books/invalid-id" | npx json
+```
+
+**Expected Error Response:**
+
+```json
+{
+  "success": false,
+  "error": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": [
+    {
+      "field": "id",
+      "message": "Invalid ObjectId format"
+    }
+  ]
+}
+```
+
+#### **9. Statistics Testing**
+
+```bash
+echo "📊 Testing Statistics..." && curl -s "http://localhost:3001/api/borrow-stats" | npx json
+```
+
+**Expected Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalBorrows": 7,
+    "activeBorrows": 0,
+    "returnedBorrows": 7,
+    "overdueBorrows": 0,
+    "lostBorrows": 0,
+    "monthlyBorrows": {
+      "2025-08": 2,
+      "2025-06": 4,
+      "2025-05": 1
+    }
+  },
+  "message": "Borrow statistics retrieved successfully"
+}
+```
+
+#### **10. Overdue Testing**
+
+```bash
+echo "📊 Testing Overdue Books..." && curl -s "http://localhost:3001/api/overdue-books" | npx json
+```
+
+**Expected Response:**
+
+```json
+Testing Overdue Books Endpoint...
+{
+  "success": true,
+  "data": [],
+  "message": "Overdue books retrieved successfully"
+}
+```
+
+#### **11. Comprehensive Health Check Script**
+
+Create a comprehensive health check script:
+
+```bash
+# Create health-check.sh
+cat > health-check.sh << 'EOF'
+#!/bin/bash
+
+echo "🏥 === BOOK LIBRARY API HEALTH CHECK ==="
+echo ""
+
+# Check if server is running
+echo "1️⃣ Checking Server Status..."
+if curl -s http://localhost:3001/health > /dev/null; then
+    echo "✅ Server is running on port 3001"
+else
+    echo "❌ Server is not responding on port 3001"
+    exit 1
+fi
+
+echo ""
+echo "2️⃣ Testing Core Endpoints..."
+
+# Test Authors
+AUTHORS_COUNT=$(curl -s "http://localhost:3001/api/authors?limit=1" | npx json pagination.totalItems)
+echo "   📚 Authors: $AUTHORS_COUNT total"
+
+# Test Books
+BOOKS_COUNT=$(curl -s "http://localhost:3001/api/books?limit=1" | npx json pagination.totalItems)
+echo "   📖 Books: $BOOKS_COUNT total"
+
+# Test Users
+USERS_COUNT=$(curl -s "http://localhost:3001/api/users?limit=1" | npx json pagination.totalItems)
+echo "   👥 Users: $USERS_COUNT total"
+
+# Test Borrow Records
+BORROWS_COUNT=$(curl -s "http://localhost:3001/api/borrow-records?limit=1" | npx json pagination.totalItems)
+echo "   📋 Borrow Records: $BORROWS_COUNT total"
+
+echo ""
+echo "3️⃣ Testing Search Functionality..."
+SEARCH_RESULTS=$(curl -s "http://localhost:3001/api/books?search=dream&limit=1" | npx json pagination.totalItems)
+echo "   🔍 Search Results: $SEARCH_RESULTS found for 'dream'"
+
+echo ""
+echo "✅ Health Check Complete - All Systems Operational!"
+EOF
+
+# Make executable and run
+chmod +x health-check.sh
+./health-check.sh
+```
+
+#### **Quick Database Counts Check**
+
+```bash
+echo "📊 Database Summary:"
+echo "Authors: $(curl -s 'http://localhost:3001/api/authors?limit=1' | grep -o '"totalItems":[0-9]*' | cut -d: -f2)"
+echo "Books: $(curl -s 'http://localhost:3001/api/books?limit=1' | grep -o '"totalItems":[0-9]*' | cut -d: -f2)"
+echo "Users: $(curl -s 'http://localhost:3001/api/users?limit=1' | grep -o '"totalItems":[0-9]*' | cut -d: -f2)"
+echo "Borrow Records: $(curl -s 'http://localhost:3001/api/borrow-records?limit=1' | grep -o '"totalItems":[0-9]*' | cut -d: -f2)"
+```
+
+#### **Monitoring Server Logs**
+
+```bash
+# View live server logs
+tail -f server.log
+
+# Check for errors in logs
+grep -i error server.log
+
+# Check MongoDB connection status
+grep -i "mongodb" server.log
+```
+
+### **Health Check Prerequisites**
+
+Before running health checks, ensure you have:
+
+```bash
+# Install npx if not available (for JSON formatting)
+npm install -g npx
+
+# Alternative: install jq for JSON formatting
+sudo apt install jq  # Ubuntu/Debian
+brew install jq      # macOS
+
+# Use jq instead of npx json
+curl -s "http://localhost:3001/api/books?limit=2" | jq
+```
+
 ### Project Structure
 
 ```text
