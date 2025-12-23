@@ -216,9 +216,14 @@ run_health_check() {
     print_header "3️⃣ ADVANCED FEATURES TESTING"
     
     # Search functionality
-    make_api_call "/api/books?search=chimamanda&limit=3" "Search functionality (African authors)"
-    make_api_call "/api/books?search=dream&limit=2" "Search functionality (specific book)"
+    make_api_call "/api/books?search=mariama&limit=3" "Search functionality (African authors)"
+    make_api_call "/api/books?search=christie&limit=3" "Search functionality (British authors)"
+    make_api_call "/api/books?search=martin&limit=3" "Search functionality (American authors)"
+    make_api_call "/api/books?search=nervous&limit=2" "Search functionality (specific book)"
+    make_api_call "/api/books?search=potter&limit=2" "Search functionality (specific book)"
     make_api_call "/api/authors?search=achebe" "Author search functionality"
+    make_api_call "/api/users?search=wilson" "User search functionality"
+    make_api_call "/api/users?search=fatoumata" "User search functionality"
     
     # Filtering
     make_api_call "/api/books?genre=Literary%20Fiction&limit=5" "Genre filtering"
