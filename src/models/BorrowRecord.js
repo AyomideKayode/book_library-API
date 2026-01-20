@@ -145,14 +145,15 @@ borrowRecordSchema.pre('save', function (next) {
 borrowRecordSchema.pre('save', async function (next) {
   if (this.isModified('status')) {
     const Book = mongoose.model('Book');
+    const session = this.$session();
 
     try {
       if (this.status === 'returned' || this.status === 'lost') {
         // Make book available when returned or marked as lost
-        await Book.findByIdAndUpdate(this.bookId, { available: true });
+        await Book.findByIdAndUpdate(this.bookId, { available: true }, { session });
       } else if (this.status === 'active') {
         // Make book unavailable when borrowed
-        await Book.findByIdAndUpdate(this.bookId, { available: false });
+        await Book.findByIdAndUpdate(this.bookId, { available: false }, { session });
       }
     } catch (error) {
       console.error('Error updating book availability:', error);

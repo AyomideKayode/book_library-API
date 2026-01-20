@@ -11,7 +11,7 @@ graph TD
     P3[Phase 3: Performance Layer] -->|Caching reduces DB load| P4
     P4[Phase 4: Async Architecture]
 
-    style P1 fill:#f9f,stroke:#333,stroke-width:2px
+    style P1 fill:#00d000,stroke:#333,stroke-width:2px,color:white
     style P2 fill:#bbf,stroke:#333,stroke-width:1px
     style P3 fill:#dfd,stroke:#333,stroke-width:1px
     style P4 fill:#fdd,stroke:#333,stroke-width:1px
@@ -26,7 +26,7 @@ graph TD
 ---
 
 ## 2. Phase 1: Reliability Foundation (Test Harness)
-**Status:** 🚧 Pending Implementation
+**Status:** ✅ COMPLETED
 **Priority:** CRITICAL
 
 ### A. Objective
@@ -37,51 +37,29 @@ Establish a robust testing framework to validate business logic and prevent regr
 *   **Documentation:** Tests serve as living documentation of expected behavior.
 *   **Bug Prevention:** Catches edge cases (e.g., race conditions in borrowing) before production.
 
-### C. Detailed Implementation Plan
-**1. Tech Stack Selection**
+### C. Implementation Details (Executed)
+**1. Tech Stack**
 *   **Framework:** `Jest` (Standard, fast, built-in coverage)
 *   **HTTP Assertions:** `Supertest` (Tests API endpoints directly)
-*   **Database:** `mongodb-memory-server` (Isolated, fast, ephemeral DB for every test run)
+*   **Database:** `mongodb-memory-server` (Isolated, fast, ephemeral DB for every test run, running as Replica Set for transactions)
 
-**2. Directory Structure**
-```text
-tests/
-├── integration/          # API Route -> Controller -> Service -> DB
-│   ├── auth.test.js
-│   ├── books.test.js
-│   └── borrowing.test.js # Critical transaction tests
-├── unit/                 # Isolated Service logic
-│   └── fineCalculation.test.js
-├── setup.js              # Global test setup (Connect to in-memory DB)
-└── tearDown.js           # Cleanup
-```
+**2. Artifacts Produced**
+*   **Test Suite:** `tests/integration/` and `tests/unit/`.
+*   **Documentation:** [`docs/TESTING_PLAYBOOK.md`](./TESTING_PLAYBOOK.md) (Developer guide).
+*   **Report:** [`docs/PHASE_1_REPORT.md`](./PHASE_1_REPORT.md) (Coverage & Risk analysis).
 
-**3. Key Scenarios to Cover**
+**3. Key Scenarios Covered**
 *   **Happy Path:** User creates account, searches book, borrows book, returns book.
 *   **Edge Cases:** Borrowing unavailable book, borrowing past limit, returning already returned book.
-*   **Transactions:** Ensure DB rollback if `borrowBook` fails halfway.
+*   **Transactions:** Validated DB rollback if `borrowBook` fails halfway using `MongoMemoryReplSet`.
 
-### D. Replication Guide (Developer Playbook)
-1.  **Install Dependencies:**
-    ```bash
-    npm install --save-dev jest supertest mongodb-memory-server cross-env
-    ```
-2.  **Configure Environment:**
-    Update `package.json` scripts:
-    ```json
-    "test": "cross-env NODE_ENV=test jest --runInBand",
-    "test:watch": "cross-env NODE_ENV=test jest --watch",
-    "test:coverage": "cross-env NODE_ENV=test jest --coverage"
-    ```
-3.  **Run Tests:**
-    ```bash
-    npm test
-    ```
+### D. Replication Guide
+See [`docs/TESTING_PLAYBOOK.md`](./TESTING_PLAYBOOK.md) for full instructions.
 
 ---
 
 ## 3. Phase 2: Observability & Security
-**Status:** Planned
+**Status:** Planned (Frozen until authorized)
 
 ### A. Objective
 Replace `console.log` and `morgan` with structured JSON logging and implement protection against abuse.
@@ -98,7 +76,7 @@ Replace `console.log` and `morgan` with structured JSON logging and implement pr
 ---
 
 ## 4. Phase 3: Performance Layer (Caching)
-**Status:** Planned
+**Status:** Planned (Frozen until authorized)
 
 ### A. Objective
 Reduce database load for read-heavy endpoints (`GET /books`, `GET /books/search`).
@@ -116,7 +94,7 @@ Reduce database load for read-heavy endpoints (`GET /books`, `GET /books/search`
 ---
 
 ## 5. Phase 4: Async Architecture (Queues)
-**Status:** Planned
+**Status:** Planned (Frozen until authorized)
 
 ### A. Objective
 Decouple time-consuming background tasks from the main request-response cycle.
