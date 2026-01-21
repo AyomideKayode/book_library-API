@@ -8,6 +8,7 @@ import {
   objectIdParamValidation,
   searchQueryValidation,
 } from '../middleware/validation.js';
+import { strictLimiter } from '../middleware/rateLimiter.js';
 
 /**
  * @swagger
@@ -271,6 +272,7 @@ router.get(
  */
 router.post(
   '/',
+  strictLimiter,
   userValidationRules(),
   handleValidationErrors,
   UserController.createUser

@@ -1,5 +1,18 @@
+import logger from '../utils/logger.js';
+
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  const log = req.log || logger;
+
+  // Use structured logging
+  log.error({
+    err: {
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+      code: err.code
+    },
+    // request details are already in the logger child if using req.log
+  }, 'Request failed');
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {

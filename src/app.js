@@ -1,7 +1,6 @@
 import express, { json, urlencoded } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -17,6 +16,8 @@ import borrowRoutes from './routes/borrowRoutes.js';
 // Import middleware
 import errorHandler from './middleware/errorHandler.js';
 import notFound from './middleware/notFound.js';
+import requestLogger from './middleware/requestLogger.js';
+import { generalLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
@@ -27,7 +28,10 @@ app.use(helmet());
 app.use(cors());
 
 // Logging middleware
-app.use(morgan('combined'));
+app.use(requestLogger);
+
+// Rate limiting (General)
+app.use(generalLimiter);
 
 // Body parsing middleware
 app.use(json({ limit: '10mb' }));
