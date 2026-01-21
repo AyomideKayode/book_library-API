@@ -12,7 +12,7 @@ graph TD
     P4[Phase 4: Async Architecture]
 
     style P1 fill:#00d000,stroke:#333,stroke-width:2px,color:white
-    style P2 fill:#bbf,stroke:#333,stroke-width:1px
+    style P2 fill:#00d000,stroke:#333,stroke-width:2px,color:white
     style P3 fill:#dfd,stroke:#333,stroke-width:1px
     style P4 fill:#fdd,stroke:#333,stroke-width:1px
 ```
@@ -69,7 +69,7 @@ See [`docs/TESTING_PLAYBOOK.md`](./TESTING_PLAYBOOK.md) for full instructions.
 
 ## 3. Phase 2: Observability & Security
 
-**Status:** Planned (Frozen until authorized)
+**Status:** ✅ COMPLETED
 
 ### A. Objective
 
@@ -80,11 +80,30 @@ See [`docs/TESTING_PLAYBOOK.md`](./TESTING_PLAYBOOK.md) for full instructions.
 - **Structured Logs:** `console.log` is unsearchable in production tools (Datadog/ELK). JSON logs allow querying by `requestId`, `userId`, or `error.code`.
 - **Rate Limiting:** Prevents denial-of-service (DoS) attacks and brute-force attempts.
 
-### C. Implementation Plan
+### C. Implementation Details (Executed)
 
-- **Library:** `winston` or `pino` for logging. `express-rate-limit` for throttling.
-- **Middleware:** Create `requestLogger` middleware to tag every request with a UUID.
-- **Config:** Set stricter limits for POST /login and POST /users.
+#### **1. Tech Stack**
+
+- **Logging:** `pino` (High performance), `pino-http`.
+- **Security:** `express-rate-limit`.
+
+#### **2. Features Implemented**
+
+- **Structured Logging:**
+  - JSON format in production.
+  - Pretty printing in development.
+  - Silent in test environment (to avoid interference).
+  - `requestLogger` middleware attaches unique `requestId` (UUID) to every request.
+- **Rate Limiting:**
+  - **Global:** 100 requests / 15 min.
+  - **Strict:** 5 requests / 15 min for sensitive endpoints (`POST /users`).
+- **Legacy Cleanup:** Moved historical documents to `docs/legacy/`.
+
+#### **3. Artifacts Produced**
+
+- **Utils:** `src/utils/logger.js`
+- **Middleware:** `src/middleware/requestLogger.js`, `src/middleware/rateLimiter.js`
+- **Tests:** `tests/integration/ratelimit.test.js`
 
 ---
 
