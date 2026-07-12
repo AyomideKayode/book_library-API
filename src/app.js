@@ -9,6 +9,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import { serve, setup } from 'swagger-ui-express';
 
 // Import routes
+import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import authorRoutes from './routes/authorRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -17,6 +18,7 @@ import borrowRoutes from './routes/borrowRoutes.js';
 // Import middleware
 import errorHandler from './middleware/errorHandler.js';
 import notFound from './middleware/notFound.js';
+import { authenticate } from './middleware/auth.js';
 
 const app = express();
 
@@ -41,7 +43,27 @@ const swaggerOptions = {
       title: 'Book Library API',
       version: '1.0.0',
       description:
-        'A comprehensive RESTful API for managing a book library system',
+        `A comprehensive RESTful API for managing a book library system.
+
+---
+
+## Quick start
+
+1. Click **Try it out** on \`POST /api/auth/login\`
+
+2. Send \`{ "email": "admin@library.com", "password": "admin123" }\`
+
+3. Copy the \`accessToken\` from the response
+
+4. Click **Authorize** → paste your token → **Authorize**
+
+5. Now explore any endpoint — you have full **admin** access
+
+## Roles
+
+- **admin** — full access (create/delete books and users, view stats, overdue books)
+
+- **user** — browse, borrow, and return books (create an account via \`POST /api/auth/register\`)`,
       contact: {
         name: 'API Support',
         email: 'support@booklibrary.com',
@@ -53,7 +75,15 @@ const swaggerOptions = {
         description: 'Development server',
       },
     ],
+    security: [{ bearerAuth: [] }],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
       schemas: {
         Book: {
           type: 'object',
@@ -315,6 +345,12 @@ app.get('/health', (req, res) => {
     version: '1.0.0',
   });
 });
+
+// Auth routes (public — before the global authenticate middleware)
+app.use('/api/auth', authRoutes);
+
+// Global authentication — all routes below require a valid token
+app.use('/api', authenticate);
 
 // API routes
 app.use('/api/books', bookRoutes);

@@ -346,6 +346,50 @@ const searchQueryValidation = () => {
   ];
 };
 
+// Auth validation rules
+const registerValidationRules = () => {
+  return [
+    body('name')
+      .trim()
+      .notEmpty()
+      .withMessage('Name is required')
+      .isLength({ min: 1, max: 255 })
+      .withMessage('Name must be between 1 and 255 characters'),
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Email is required')
+      .isEmail()
+      .withMessage('Invalid email format')
+      .normalizeEmail(),
+    body('password')
+      .notEmpty()
+      .withMessage('Password is required')
+      .isLength({ min: 6 })
+      .withMessage('Password must be at least 6 characters'),
+    body('phone')
+      .optional()
+      .trim()
+      .matches(/^[\+]?[1-9][\d\-\s\(\)]{0,20}$/)
+      .withMessage('Invalid phone number format'),
+  ];
+};
+
+const loginValidationRules = () => {
+  return [
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Email is required')
+      .isEmail()
+      .withMessage('Invalid email format')
+      .normalizeEmail(),
+    body('password')
+      .notEmpty()
+      .withMessage('Password is required'),
+  ];
+};
+
 export {
   handleValidationErrors,
   bookValidationRules,
@@ -358,4 +402,6 @@ export {
   returnValidationRules,
   objectIdParamValidation,
   searchQueryValidation,
+  registerValidationRules,
+  loginValidationRules,
 };
