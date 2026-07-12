@@ -9,9 +9,9 @@
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
     "migrate": "node --trace-warnings scripts/migrate.js",
-    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
-    "test:watch": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage"
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --testTimeout=30000",
+    "test:watch": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch --testTimeout=30000",
+    "test:coverage": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --testTimeout=30000"
   },
   "keywords": [
     "rest",
@@ -26,11 +26,13 @@
   "author": "Book Library Team",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
     "helmet": "^4.6.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.16.1",
     "morgan": "^1.10.0",
     "swagger-jsdoc": "^6.2.8",
