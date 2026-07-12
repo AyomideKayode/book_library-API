@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema(
   {
@@ -21,13 +22,23 @@ const userSchema = new mongoose.Schema(
         message: 'Invalid email format',
       },
     },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters'],
+      select: false,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
     phone: {
       type: String,
       trim: true,
       validate: {
         validator: function (v) {
-          if (!v) return true; // Allow empty phone
-          // International phone number format
+          if (!v) return true;
           return /^[\+]?[1-9][\d]{0,15}$/.test(v.replace(/[\s\-\(\)]/g, ''));
         },
         message: 'Invalid phone number format',
@@ -36,7 +47,6 @@ const userSchema = new mongoose.Schema(
     membershipDate: {
       type: Date,
       default: Date.now,
-      // index: true
     },
     address: {
       street: String,
@@ -84,7 +94,7 @@ const userSchema = new mongoose.Schema(
       number: {
         type: String,
         unique: true,
-        sparse: true, // Allow multiple null values
+        sparse: true,
       },
       issuedDate: Date,
       expiryDate: Date,
@@ -94,6 +104,10 @@ const userSchema = new mongoose.Schema(
       phone: String,
       relationship: String,
     },
+    refreshToken: {
+      type: String,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -102,20 +116,16 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for performance
-userSchema.index({ name: 'text' }); // Text search
+userSchema.index({ name: 'text' });
 userSchema.index({ membershipDate: 1 });
-// userSchema.index({ 'libraryCard.number': 1 });
-userSchema.index({ status: 1, membershipDate: 1 }); // Compound index
+userSchema.index({ status: 1, membershipDate: 1 });
 
-// Virtual for borrow records
 userSchema.virtual('borrowRecords', {
   ref: 'BorrowRecord',
   localField: '_id',
   foreignField: 'userId',
 });
 
-// Virtual for active borrows
 userSchema.virtual('activeBorrows', {
   ref: 'BorrowRecord',
   localField: '_id',
@@ -123,7 +133,6 @@ userSchema.virtual('activeBorrows', {
   match: { status: 'active' },
 });
 
-// Virtual for membership duration
 userSchema.virtual('membershipDuration').get(function () {
   const now = new Date();
   const membershipDate = new Date(this.membershipDate);
@@ -132,21 +141,22 @@ userSchema.virtual('membershipDuration').get(function () {
   return diffDays;
 });
 
-// Virtual for full address
 userSchema.virtual('fullAddress').get(function () {
   if (!this.address) return null;
   const { street, city, state, zipCode, country } = this.address;
   return [street, city, state, zipCode, country].filter(Boolean).join(', ');
 });
 
-// Pre-save middleware
-userSchema.pre('save', function (next) {
-  // Ensure email is lowercase
+userSchema.pre('save', async function (next) {
   if (this.email) {
     this.email = this.email.toLowerCase();
   }
 
-  // Generate library card number if not exists
+  if (this.isModified('password') && this.password) {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
   if (!this.libraryCard?.number && this.isNew) {
     const year = new Date().getFullYear();
     const random = Math.floor(Math.random() * 10000)
@@ -155,19 +165,21 @@ userSchema.pre('save', function (next) {
     this.libraryCard = {
       number: `LIB${year}${random}`,
       issuedDate: new Date(),
-      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     };
   }
 
   next();
 });
 
-// Static method to find active users
+userSchema.methods.comparePassword = async function (candidate) {
+  return bcrypt.compare(candidate, this.password);
+};
+
 userSchema.statics.findActive = function () {
   return this.find({ status: 'active' });
 };
 
-// Static method to find users by membership year
 userSchema.statics.findByMembershipYear = function (year) {
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
@@ -179,16 +191,14 @@ userSchema.statics.findByMembershipYear = function (year) {
   });
 };
 
-// Instance method to check if user can borrow
 userSchema.methods.canBorrow = async function () {
   const activeBorrows = await mongoose.model('BorrowRecord').countDocuments({
     userId: this._id,
     status: 'active',
   });
-  return this.status === 'active' && activeBorrows < 5; // Max 5 books at a time
+  return this.status === 'active' && activeBorrows < 5;
 };
 
-// Instance method to get user's borrowing history
 userSchema.methods.getBorrowHistory = function () {
   return this.populate('borrowRecords');
 };
