@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -13,6 +14,10 @@ import Author from '../src/models/Author.js';
 import Book from '../src/models/Book.js';
 import User from '../src/models/User.js';
 import BorrowRecord from '../src/models/BorrowRecord.js';
+
+// Seed passwords from env (with dev fallbacks)
+const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD || 'password123';
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || 'admin123';
 
 // Connect to MongoDB
 async function connectDB() {
@@ -311,8 +316,33 @@ const africanUsersData = [
   },
 ];
 
-// Combine all users
-const usersData = [...originalUsersData, ...africanUsersData];
+// Admin user
+const adminData = {
+  name: 'Admin User',
+  email: 'admin@library.com',
+  password: 'admin123',
+  role: 'admin',
+  phone: '+1-555-999-9999',
+  address: {
+    street: '1 Admin Plaza',
+    city: 'Booktown',
+    state: 'Admin',
+    zipCode: '99999',
+    country: 'USA',
+  },
+  membershipDate: new Date('2023-01-01'),
+};
+
+// Add hashed password to all regular users
+const hash = bcrypt.hashSync(SEED_USER_PASSWORD, 10);
+const adminHash = bcrypt.hashSync(SEED_ADMIN_PASSWORD, 10);
+
+const withPassword = (u) => ({ ...u, password: hash });
+const usersData = [
+  ...originalUsersData.map(withPassword),
+  ...africanUsersData.map(withPassword),
+  { ...adminData, password: adminHash },
+];
 
 // Books data (will be populated with author IDs after authors are created)
 const getBooksData = (authors) => {
